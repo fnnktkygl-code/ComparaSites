@@ -300,15 +300,28 @@ class AppState extends ChangeNotifier {
     try {
       double? price;
 
-      // ── Strategy A (Zara): Dedicated HTTP/JSON approach — no WebView needed ──
+      // ── Strategy A (Zara): Dedicated approach ──
       if (brand.key == 'zara') {
-        price = await _api.fetchZaraPrice(
-          country,
-          productId!,
-          zaraSlug: _zaraSlug,
-        );
-        if (price != null) {
-          debugPrint('[AppState] Zara price for ${country.name}: $price');
+        if (kIsWeb) {
+          // Zara blocks all server-side/proxy fetches (403 on everything).
+          // Best UX: give user a direct link to the product page per country.
+          final locale = country.zaraPath;
+          final url = (_zaraSlug != null)
+              ? 'https://www.zara.com/$locale/$_zaraSlug'
+              : _api.getSearchUrl(country, brand.key, productId!);
+          _prices[country.code] = PriceResult.webOnly(url);
+          notifyListeners();
+          return false;
+        } else {
+          // Mobile: try direct HTTP fetch
+          price = await _api.fetchZaraPrice(
+            country,
+            productId!,
+            zaraSlug: _zaraSlug,
+          );
+          if (price != null) {
+            debugPrint('[AppState] Zara price for ${country.name}: $price');
+          }
         }
       }
 

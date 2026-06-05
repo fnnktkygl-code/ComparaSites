@@ -102,6 +102,8 @@ class PriceCard extends StatelessWidget {
                      // Content
                      if (result?.isLoaded == true)
                        _buildPriceContent(context)
+                     else if (result?.isWebOnly == true)
+                       _buildWebOnlyContent(context)
                      else if (result?.isError == true)
                        _buildErrorContent(context)
                      else
@@ -197,6 +199,42 @@ class PriceCard extends StatelessWidget {
           ),
         ]
       ],
+    );
+  }
+
+  Widget _buildWebOnlyContent(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final linkColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8);
+    final bgColor = isDark ? const Color(0xFF1E2D47) : const Color(0xFFEFF6FF);
+
+    return GestureDetector(
+      onTap: onTap, // opens the URL via the card's onTap callback
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.open_in_new_rounded, size: 11, color: linkColor),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                'Voir le prix',
+                style: TextStyle(
+                  color: linkColor,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -633,18 +633,21 @@ class _SearchScreenState extends State<SearchScreen> {
               onScan: () => state.scanCountry(country),
               onTap: () async {
                   if (state.productId != null) {
-                      final url = state.api.getSearchUrl(country, state.brand.key, state.productId!);
+                      // For webOnly cards (e.g. Zara on web), use the stored product URL
+                      final url = (result?.isWebOnly == true && result?.actionUrl != null)
+                          ? result!.actionUrl!
+                          : state.api.getSearchUrl(country, state.brand.key, state.productId!);
                       final uri = Uri.parse(url);
                       try {
                         final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
                         if (!launched && context.mounted) {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => 
+                          Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
                              WebviewScreen(url: url, title: country.name)
                           ));
                         }
                       } catch (_) {
                         if (context.mounted) {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => 
+                          Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
                              WebviewScreen(url: url, title: country.name)
                           ));
                         }
