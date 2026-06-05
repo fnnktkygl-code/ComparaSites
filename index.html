@@ -24,9 +24,9 @@
         ComparaSites
       </a>
       <div class="nav-links">
-        <a href="#features">Fonctionnalités</a>
-        <a href="#brands">Enseignes</a>
-        <a href="#how">Comment ça marche</a>
+        <a href="#features" id="nav-link-features">Fonctionnalités</a>
+        <a href="#brands" id="nav-link-brands">Enseignes</a>
+        <a href="#how" id="nav-link-how">Comment ça marche</a>
         <a href="./app/" class="btn btn-sm" id="nav-cta">Lancer l'app →</a>
       </div>
       <button class="nav-burger" id="nav-burger" aria-label="Menu">
@@ -34,10 +34,10 @@
       </button>
     </div>
     <div class="nav-mobile" id="nav-mobile">
-      <a href="#features">Fonctionnalités</a>
-      <a href="#brands">Enseignes</a>
-      <a href="#how">Comment ça marche</a>
-      <a href="./app/" class="btn btn-mobile">Lancer l'app →</a>
+      <a href="#features" id="nav-mobile-features">Fonctionnalités</a>
+      <a href="#brands" id="nav-mobile-brands">Enseignes</a>
+      <a href="#how" id="nav-mobile-how">Comment ça marche</a>
+      <a href="./app/" class="btn btn-mobile" id="nav-mobile-cta">Lancer l'app →</a>
     </div>
   </nav>
 
@@ -50,15 +50,15 @@
     <div class="hero-content">
       <div class="hero-badge">
         <span class="badge-dot"></span>
-        Disponible en version Web
+        <span id="hero-badge-text">Disponible en version Web</span>
       </div>
 
-      <h1 class="hero-title">
+      <h1 class="hero-title" id="hero-title">
         Trouvez le meilleur prix<br />
         <span class="gradient-text">en Europe</span>
       </h1>
 
-      <p class="hero-subtitle">
+      <p class="hero-subtitle" id="hero-subtitle">
         Comparez instantanément les prix de vos enseignes préférées dans 
         <strong>12 pays européens</strong>. Économisez sur chaque achat.
       </p>
@@ -68,7 +68,7 @@
           <span class="btn-icon">🚀</span>
           Lancer l'application Web
         </a>
-        <a href="https://github.com/fnnktkygl-code/ComparaSites" target="_blank" rel="noopener" class="btn btn-ghost btn-large">
+        <a href="https://github.com/fnnktkygl-code/ComparaSites" target="_blank" rel="noopener" class="btn btn-ghost btn-large" id="hero-github">
           <span class="btn-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
           </span>
@@ -79,17 +79,17 @@
       <div class="hero-stats">
         <div class="stat">
           <span class="stat-value">6</span>
-          <span class="stat-label">Enseignes</span>
+          <span class="stat-label" id="stat-brands-label">Enseignes</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat">
           <span class="stat-value">12</span>
-          <span class="stat-label">Pays</span>
+          <span class="stat-label" id="stat-countries-label">Pays</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat">
           <span class="stat-value">100%</span>
-          <span class="stat-label">Gratuit</span>
+          <span class="stat-label" id="stat-free-label">Gratuit</span>
         </div>
       </div>
     </div>
@@ -103,40 +103,40 @@
   <!-- ══ FEATURES ══ -->
   <section class="section features-section" id="features">
     <div class="section-inner">
-      <div class="section-label">Fonctionnalités</div>
-      <h2 class="section-title">Tout ce dont vous avez besoin<br />pour acheter malin</h2>
-      <p class="section-subtitle">Une application conçue pour les acheteurs avisés qui veulent les meilleures offres en Europe.</p>
+      <div class="section-label" id="features-label">Fonctionnalités</div>
+      <h2 class="section-title" id="features-title">Tout ce dont vous avez besoin<br />pour acheter malin</h2>
+      <p class="section-subtitle" id="features-subtitle">Une application conçue pour les acheteurs avisés qui veulent les meilleures offres en Europe.</p>
 
       <div class="features-grid">
         <div class="feature-card" data-anim>
           <div class="feature-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">🔍</div>
-          <h3>Recherche multi-pays</h3>
-          <p>Scannez simultanément 12 pays européens pour trouver où le même produit est le moins cher.</p>
+          <h3 id="feat-1-title">Recherche multi-pays</h3>
+          <p id="feat-1-desc">Scannez simultanément 12 pays européens pour trouver où le même produit est le moins cher.</p>
         </div>
         <div class="feature-card" data-anim>
           <div class="feature-icon" style="background:linear-gradient(135deg,#10b981,#059669)">💡</div>
-          <h3>Meilleur prix mis en avant</h3>
-          <p>Un bandeau doré met en avant le pays le moins cher et les économies par rapport à la France.</p>
+          <h3 id="feat-2-title">Meilleur prix mis en avant</h3>
+          <p id="feat-2-desc">Un bandeau doré met en avant le pays le moins cher et les économies par rapport à la France.</p>
         </div>
         <div class="feature-card" data-anim>
           <div class="feature-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)">⚡</div>
-          <h3>Scan pays par pays</h3>
-          <p>Rafraîchissez un seul pays sans relancer toute la comparaison. Plus rapide, plus flexible.</p>
+          <h3 id="feat-3-title">Scan pays par pays</h3>
+          <p id="feat-3-desc">Rafraîchissez un seul pays sans relancer toute la comparaison. Plus rapide, plus flexible.</p>
         </div>
         <div class="feature-card" data-anim>
           <div class="feature-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626)">📱</div>
-          <h3>Accès direct au site</h3>
-          <p>Appuyez sur une carte prix pour ouvrir directement la page du produit dans votre navigateur.</p>
+          <h3 id="feat-4-title">Accès direct au site</h3>
+          <p id="feat-4-desc">Appuyez sur une carte prix pour ouvrir directement la page du produit dans votre navigateur.</p>
         </div>
         <div class="feature-card" data-anim>
           <div class="feature-icon" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">📋</div>
-          <h3>Historique des scans</h3>
-          <p>Retrouvez et relancez vos recherches précédentes en un tap depuis l'onglet historique.</p>
+          <h3 id="feat-5-title">Historique des scans</h3>
+          <p id="feat-5-desc">Retrouvez et relancez vos recherches précédentes en un tap depuis l'onglet historique.</p>
         </div>
         <div class="feature-card" data-anim>
           <div class="feature-icon" style="background:linear-gradient(135deg,#ec4899,#db2777)">💱</div>
-          <h3>Conversion automatique</h3>
-          <p>Toutes les devises (PLN, GBP, RON, HUF, CZK...) sont automatiquement converties en EUR.</p>
+          <h3 id="feat-6-title">Conversion automatique</h3>
+          <p id="feat-6-desc">Toutes les devises (PLN, GBP, RON, HUF, CZK...) sont automatiquement converties en EUR.</p>
         </div>
       </div>
     </div>
@@ -145,15 +145,15 @@
   <!-- ══ BRANDS ══ -->
   <section class="section brands-section" id="brands">
     <div class="section-inner">
-      <div class="section-label">Enseignes supportées</div>
-      <h2 class="section-title">6 grandes enseignes,<br />12 pays, un seul outil</h2>
+      <div class="section-label" id="brands-label">Enseignes supportées</div>
+      <h2 class="section-title" id="brands-title">6 grandes enseignes,<br />12 pays, un seul outil</h2>
 
       <div class="brands-grid">
         <div class="brand-card" data-anim>
           <div class="brand-logo decathlon">D</div>
           <div class="brand-info">
             <h3>Decathlon</h3>
-            <p>Sport & outdoor</p>
+            <p id="brand-decathlon-cat">Sport & outdoor</p>
           </div>
           <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇧🇪 🇵🇹 +</div>
         </div>
@@ -161,7 +161,7 @@
           <div class="brand-logo zara">Z</div>
           <div class="brand-info">
             <h3>Zara</h3>
-            <p>Mode & vêtements</p>
+            <p id="brand-zara-cat">Mode & vêtements</p>
           </div>
           <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇬🇧 🇵🇱 +</div>
         </div>
@@ -169,7 +169,7 @@
           <div class="brand-logo jd">JD</div>
           <div class="brand-info">
             <h3>JD Sports</h3>
-            <p>Sneakers & sport</p>
+            <p id="brand-jd-cat">Sneakers & sport</p>
           </div>
           <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇬🇧 🇵🇱</div>
         </div>
@@ -177,7 +177,7 @@
           <div class="brand-logo amazon">A</div>
           <div class="brand-info">
             <h3>Amazon</h3>
-            <p>Tout produit</p>
+            <p id="brand-amazon-cat">Tout produit</p>
           </div>
           <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇬🇧 🇵🇱</div>
         </div>
@@ -185,7 +185,7 @@
           <div class="brand-logo ikea">I</div>
           <div class="brand-info">
             <h3>IKEA</h3>
-            <p>Mobilier & déco</p>
+            <p id="brand-ikea-cat">Mobilier & déco</p>
           </div>
           <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇬🇧 🇵🇱 +</div>
         </div>
@@ -193,7 +193,7 @@
           <div class="brand-logo sephora">S</div>
           <div class="brand-info">
             <h3>Sephora</h3>
-            <p>Beauté & cosmétiques</p>
+            <p id="brand-sephora-cat">Beauté & cosmétiques</p>
           </div>
           <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇵🇱 🇷🇴</div>
         </div>
@@ -204,31 +204,31 @@
   <!-- ══ HOW IT WORKS ══ -->
   <section class="section how-section" id="how">
     <div class="section-inner">
-      <div class="section-label">Comment ça marche</div>
-      <h2 class="section-title">Trouvez le meilleur prix<br />en 3 étapes</h2>
+      <div class="section-label" id="how-label">Comment ça marche</div>
+      <h2 class="section-title" id="how-title">Trouvez le meilleur prix<br />en 3 étapes</h2>
 
       <div class="steps-grid">
         <div class="step" data-anim>
           <div class="step-num">01</div>
           <div class="step-content">
-            <h3>Choisissez une enseigne</h3>
-            <p>Sélectionnez parmi Decathlon, Zara, Amazon, IKEA, Sephora ou JD Sports selon vos besoins.</p>
+            <h3 id="step-1-title">Choisissez une enseigne</h3>
+            <p id="step-1-desc">Sélectionnez parmi Decathlon, Zara, Amazon, IKEA, Sephora ou JD Sports selon vos besoins.</p>
           </div>
         </div>
         <div class="step-arrow">→</div>
         <div class="step" data-anim>
           <div class="step-num">02</div>
           <div class="step-content">
-            <h3>Entrez une référence</h3>
-            <p>Collez l'URL d'un produit ou tapez la référence directement. L'app extrait automatiquement l'ID.</p>
+            <h3 id="step-2-title">Entrez une référence</h3>
+            <p id="step-2-desc">Collez l'URL d'un produit ou tapez la référence directement. L'app extrait automatiquement l'ID.</p>
           </div>
         </div>
         <div class="step-arrow">→</div>
         <div class="step" data-anim>
           <div class="step-num">03</div>
           <div class="step-content">
-            <h3>Comparez et économisez</h3>
-            <p>Les prix sont triés du moins cher au plus cher. Appuyez sur la carte pour aller acheter.</p>
+            <h3 id="step-3-title">Comparez et économisez</h3>
+            <p id="step-3-desc">Les prix sont triés du moins cher au plus cher. Appuyez sur la carte pour aller acheter.</p>
           </div>
         </div>
       </div>
@@ -240,13 +240,13 @@
     <div class="blob blob-cta-1"></div>
     <div class="blob blob-cta-2"></div>
     <div class="cta-inner" data-anim>
-      <h2 class="cta-title">Prêt à économiser<br /><span class="gradient-text">sur vos achats ?</span></h2>
-      <p class="cta-subtitle">Accédez à l'application gratuitement, directement dans votre navigateur. Aucune installation requise.</p>
+      <h2 class="cta-title" id="footer-cta-title">Prêt à économiser<br /><span class="gradient-text">sur vos achats ?</span></h2>
+      <p class="cta-subtitle" id="footer-cta-subtitle">Accédez à l'application gratuitement, directement dans votre navigateur. Aucune installation requise.</p>
       <a href="./app/" class="btn btn-primary btn-large btn-glow" id="footer-cta">
         <span class="btn-icon">✦</span>
         Lancer ComparaSites Web
       </a>
-      <p class="cta-hint">Fonctionne sur ordinateur, tablette et mobile</p>
+      <p class="cta-hint" id="footer-cta-hint">Fonctionne sur ordinateur, tablette et mobile</p>
     </div>
   </section>
 
@@ -257,13 +257,13 @@
         <span class="logo-icon">◈</span>
         ComparaSites
       </div>
-      <p class="footer-desc">Comparateur de prix pour l'Europe. Projet open source.</p>
+      <p class="footer-desc" id="footer-desc">Comparateur de prix pour l'Europe. Projet open source.</p>
       <div class="footer-links">
         <a href="https://github.com/fnnktkygl-code/ComparaSites" target="_blank" rel="noopener">GitHub</a>
         <a href="./app/" id="footer-app-link">Application Web</a>
-        <a href="#features">Fonctionnalités</a>
+        <a href="#features" id="footer-link-features">Fonctionnalités</a>
       </div>
-      <p class="footer-copy">© 2026 ComparaSites. Open Source sous licence MIT.</p>
+      <p class="footer-copy" id="footer-copy">© 2026 ComparaSites. Open Source sous licence MIT.</p>
     </div>
   </footer>
 
@@ -298,6 +298,195 @@
       });
     }, { threshold: 0.12 });
     document.querySelectorAll('[data-anim]').forEach(el => observer.observe(el));
+
+    // ══ TRANSLATIONS DICTIONARY ══
+    const translations = {
+      en: {
+        title: "ComparaSites — Compare Prices in Europe",
+        navFeatures: "Features",
+        navBrands: "Brands",
+        navHow: "How it works",
+        navCta: "Launch App →",
+        badge: "Available as a Web App",
+        heroTitle: "Find the best price<br /><span class=\"gradient-text\">in Europe</span>",
+        heroSubtitle: "Instantly compare prices of your favorite brands in <strong>12 European countries</strong>. Save money on every purchase.",
+        heroCta: "🚀 Launch Web Application",
+        heroGithub: "View Source Code",
+        statBrands: "Brands",
+        statCountries: "Countries",
+        statFree: "Free",
+        featuresLabel: "Features",
+        featuresTitle: "Everything you need<br />to shop smart",
+        featuresSubtitle: "An app designed for clever shoppers who want the best deals in Europe.",
+        feat1Title: "Multi-country search",
+        feat1Desc: "Scan 12 European countries simultaneously to find where the same product is the cheapest.",
+        feat2Title: "Best price highlighted",
+        feat2Desc: "A golden badge highlights the cheapest country and the savings compared to France.",
+        feat3Title: "Scan country by country",
+        feat3Desc: "Refresh a single country without restarting the entire comparison. Faster, more flexible.",
+        feat4Title: "Direct store access",
+        feat4Desc: "Tap a price card to open the product page directly in your browser.",
+        feat5Title: "Scan history",
+        feat5Desc: "Retrieve and re-run your previous searches in one tap from the history tab.",
+        feat6Title: "Automatic conversion",
+        feat6Desc: "All currencies (PLN, GBP, RON, HUF, CZK...) are automatically converted into EUR.",
+        brandsLabel: "Supported Brands",
+        brandsTitle: "6 major brands,<br />12 countries, one tool",
+        catSport: "Sport & outdoor",
+        catFashion: "Fashion & clothing",
+        catIkea: "Furniture & decor",
+        catBeaut: "Beauty & cosmetics",
+        catAmazon: "All products",
+        howLabel: "How it works",
+        howTitle: "Find the best price<br />in 3 steps",
+        step1Title: "Choose a brand",
+        step1Desc: "Select from Decathlon, Zara, Amazon, IKEA, Sephora, or JD Sports according to your needs.",
+        step2Title: "Enter a reference",
+        step2Desc: "Paste a product URL or type the reference directly. The app automatically extracts the ID.",
+        step3Title: "Compare & Save",
+        step3Desc: "Prices are sorted cheapest first. Tap the card to go buy the product.",
+        ctaTitle: "Ready to save money<br /><span class=\"gradient-text\">on your purchases?</span>",
+        ctaSubtitle: "Access the application for free, directly in your browser. No installation required.",
+        ctaBtn: "✦ Launch ComparaSites Web",
+        ctaHint: "Works on desktop, tablet, and mobile",
+        footerDesc: "Price comparator for Europe. Open source project.",
+        footerCopy: "© 2026 ComparaSites. Open Source under MIT License."
+      },
+      es: {
+        title: "ComparaSites — Compara Precios en Europa",
+        navFeatures: "Características",
+        navBrands: "Marcas",
+        navHow: "Cómo funciona",
+        navCta: "Iniciar App →",
+        badge: "Disponible en versión Web",
+        heroTitle: "Encuentra el mejor precio<br /><span class=\"gradient-text\">en Europa</span>",
+        heroSubtitle: "Compara instantáneamente los precios de tus marcas favoritas en <strong>12 países europeos</strong>. Ahorra en cada compra.",
+        heroCta: "🚀 Iniciar aplicación Web",
+        heroGithub: "Ver código fuente",
+        statBrands: "Marcas",
+        statCountries: "Países",
+        statFree: "Gratis",
+        featuresLabel: "Características",
+        featuresTitle: "Todo lo que necesitas<br />para comprar de forma inteligente",
+        featuresSubtitle: "Una aplicación diseñada para compradores astutos que quieren las mejores ofertas en Europa.",
+        feat1Title: "Búsqueda multipaís",
+        feat1Desc: "Escanea 12 países europeos simultáneamente para encontrar dónde es más barato el mismo producto.",
+        feat2Title: "Mejor precio destacado",
+        feat2Desc: "Un banner dorado destaca el país más barato y el ahorro en comparación con Francia.",
+        feat3Title: "Escaneo país por país",
+        feat3Desc: "Actualiza un solo país sin reiniciar toda la comparación. Más rápido, más flexible.",
+        feat4Title: "Acceso directo a la tienda",
+        feat4Desc: "Toca una tarjeta de precio para abrir la página del producto directamente en tu navegador.",
+        feat5Title: "Historial de escaneos",
+        feat5Desc: "Recupera y vuelve a lanzar tus búsquedas anteriores con un toque desde la pestaña de historial.",
+        feat6Title: "Conversión automática",
+        feat6Desc: "Todas las monedas (PLN, GBP, RON, HUF, CZK...) se convierten automáticamente a EUR.",
+        brandsLabel: "Tiendas compatibles",
+        brandsTitle: "6 grandes marcas,<br />12 países, una sola herramienta",
+        catSport: "Deportes & outdoor",
+        catFashion: "Moda & ropa",
+        catIkea: "Muebles & decoración",
+        catBeaut: "Belleza & cosméticos",
+        catAmazon: "Cualquier producto",
+        howLabel: "Cómo funciona",
+        howTitle: "Encuentra el mejor precio<br />en 3 pasos",
+        step1Title: "Elige una tienda",
+        step1Desc: "Selecciona entre Decathlon, Zara, Amazon, IKEA, Sephora o JD Sports según tus necesidades.",
+        step2Title: "Introduce una referencia",
+        step2Desc: "Pega el enlace de un producto o escribe la referencia directamente. La app extrae el ID de forma automática.",
+        step3Title: "Compara y ahorra",
+        step3Desc: "Los precios se ordenan del más barato al más caro. Toca la tarjeta para ir a comprar.",
+        ctaTitle: "¿Listo para ahorrar dinero<br /><span class=\"gradient-text\">en tus compras?</span>",
+        ctaSubtitle: "Accede a la aplicación gratis, directamente en tu navegador. No requiere instalación.",
+        ctaBtn: "✦ Iniciar ComparaSites Web",
+        ctaHint: "Funciona en ordenadores, tabletas y móviles",
+        footerDesc: "Comparador de precios para Europa. Proyecto de código abierto.",
+        footerCopy: "© 2026 ComparaSites. Código abierto bajo la licencia MIT."
+      }
+    };
+
+    // Detect language and apply translations
+    function applyTranslations() {
+      const userLang = (navigator.language || navigator.userLanguage || 'fr').substring(0, 2);
+      const dict = translations[userLang];
+      if (!dict) return; // Fallback to HTML default (French)
+
+      document.title = dict.title;
+      document.querySelector('meta[name="description"]').setAttribute('content', dict.heroSubtitle.replace(/<\/?[^>]+(>|$)/g, ""));
+
+      // Nav
+      document.getElementById('nav-link-features').innerText = dict.navFeatures;
+      document.getElementById('nav-link-brands').innerText = dict.navBrands;
+      document.getElementById('nav-link-how').innerText = dict.navHow;
+      document.getElementById('nav-cta').innerText = dict.navCta;
+
+      document.getElementById('nav-mobile-features').innerText = dict.navFeatures;
+      document.getElementById('nav-mobile-brands').innerText = dict.navBrands;
+      document.getElementById('nav-mobile-how').innerText = dict.navHow;
+      document.getElementById('nav-mobile-cta').innerText = dict.navCta;
+
+      // Hero
+      document.getElementById('hero-badge-text').innerText = dict.badge;
+      document.getElementById('hero-title').innerHTML = dict.heroTitle;
+      document.getElementById('hero-subtitle').innerHTML = dict.heroSubtitle;
+      document.getElementById('hero-cta').innerHTML = `<span class="btn-icon">🚀</span> ${dict.heroCta.replace('🚀', '').trim()}`;
+      document.getElementById('hero-github').innerHTML = `<span class="btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg></span> ${dict.heroGithub}`;
+      document.getElementById('stat-brands-label').innerText = dict.statBrands;
+      document.getElementById('stat-countries-label').innerText = dict.statCountries;
+      document.getElementById('stat-free-label').innerText = dict.statFree;
+
+      // Features
+      document.getElementById('features-label').innerText = dict.featuresLabel;
+      document.getElementById('features-title').innerHTML = dict.featuresTitle;
+      document.getElementById('features-subtitle').innerText = dict.featuresSubtitle;
+      document.getElementById('feat-1-title').innerText = dict.feat1Title;
+      document.getElementById('feat-1-desc').innerText = dict.feat1Desc;
+      document.getElementById('feat-2-title').innerText = dict.feat2Title;
+      document.getElementById('feat-2-desc').innerText = dict.feat2Desc;
+      document.getElementById('feat-3-title').innerText = dict.feat3Title;
+      document.getElementById('feat-3-desc').innerText = dict.feat3Desc;
+      document.getElementById('feat-4-title').innerText = dict.feat4Title;
+      document.getElementById('feat-4-desc').innerText = dict.feat4Desc;
+      document.getElementById('feat-5-title').innerText = dict.feat5Title;
+      document.getElementById('feat-5-desc').innerText = dict.feat5Desc;
+      document.getElementById('feat-6-title').innerText = dict.feat6Title;
+      document.getElementById('feat-6-desc').innerText = dict.feat6Desc;
+
+      // Brands
+      document.getElementById('brands-label').innerText = dict.brandsLabel;
+      document.getElementById('brands-title').innerHTML = dict.brandsTitle;
+      document.getElementById('brand-decathlon-cat').innerText = dict.catSport;
+      document.getElementById('brand-zara-cat').innerText = dict.catFashion;
+      document.getElementById('brand-jd-cat').innerText = dict.catSport;
+      document.getElementById('brand-amazon-cat').innerText = dict.catAmazon;
+      document.getElementById('brand-ikea-cat').innerText = dict.catIkea;
+      document.getElementById('brand-sephora-cat').innerText = dict.catBeaut;
+
+      // How
+      document.getElementById('how-label').innerText = dict.howLabel;
+      document.getElementById('how-title').innerHTML = dict.howTitle;
+      document.getElementById('step-1-title').innerText = dict.step1Title;
+      document.getElementById('step-1-desc').innerText = dict.step1Desc;
+      document.getElementById('step-2-title').innerText = dict.step2Title;
+      document.getElementById('step-2-desc').innerText = dict.step2Desc;
+      document.getElementById('step-3-title').innerText = dict.step3Title;
+      document.getElementById('step-3-desc').innerText = dict.step3Desc;
+
+      // CTA Footer
+      document.getElementById('footer-cta-title').innerHTML = dict.ctaTitle;
+      document.getElementById('footer-cta-subtitle').innerText = dict.ctaSubtitle;
+      document.getElementById('footer-cta').innerHTML = `<span class="btn-icon">✦</span> ${dict.ctaBtn.replace('✦', '').trim()}`;
+      document.getElementById('footer-cta-hint').innerText = dict.ctaHint;
+
+      // Footer
+      document.getElementById('footer-desc').innerText = dict.footerDesc;
+      document.getElementById('footer-app-link').innerText = dict.navCta.replace('→', '').trim();
+      document.getElementById('footer-link-features').innerText = dict.navFeatures;
+      document.getElementById('footer-copy').innerText = dict.footerCopy;
+    }
+
+    // Run translations
+    applyTranslations();
   </script>
 </body>
 </html>

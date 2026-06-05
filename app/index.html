@@ -99,11 +99,36 @@
         background-color: #050c1a;
           }
     }
+
+    .loader-container {
+      position: absolute;
+      top: calc(50% + 100px);
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loader {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(99, 102, 241, 0.15);
+      border-radius: 50%;
+      border-top-color: #6366f1;
+      animation: spin 1s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
   <script id="splash-screen-script">
     function removeSplashFromWeb() {
       document.getElementById("splash")?.remove();
       document.getElementById("splash-branding")?.remove();
+      document.getElementById("web-loader")?.remove();
       document.body.style.background = "transparent";
     }
   </script>
@@ -120,9 +145,9 @@
       <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
   </picture>
   
-  
-  
-  
+  <div id="web-loader" class="loader-container">
+    <div class="loader"></div>
+  </div>
   
   <script src="flutter_bootstrap.js" async=""></script>
 
