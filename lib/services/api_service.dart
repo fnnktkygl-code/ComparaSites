@@ -5,14 +5,15 @@ import '../models/country.dart';
 
 class ApiService {
   final Dio _dio = Dio();
-  final Dio _zaraDio = Dio(); // Dedicated Dio for Zara API (no mobile user-agent)
+
+  // A separate Dio instance for Zara — desktop user-agent, no mobile spoofing
+  final Dio _zaraDio = Dio();
 
   // Cache for exchange rates (fallback defaults)
   final Map<String, double> _exchangeRates = {
     'PLN': 4.30, 'GBP': 0.85, 'RON': 4.97, 'HUF': 400.0, 'CZK': 25.3,
   };
 
-  /// Timestamp of last successful exchange rate fetch (for TTL caching).
   DateTime? _ratesLastFetched;
 
   ApiService() {
@@ -25,20 +26,20 @@ class ApiService {
       'Accept-Language': 'en-US,en;q=0.9',
     };
 
-    _zaraDio.options.connectTimeout = const Duration(seconds: 12);
-    _zaraDio.options.receiveTimeout = const Duration(seconds: 12);
+    _zaraDio.options.connectTimeout = const Duration(seconds: 15);
+    _zaraDio.options.receiveTimeout = const Duration(seconds: 15);
     _zaraDio.options.headers = {
       'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Accept': 'application/json, text/plain, */*',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
-      'Referer': 'https://www.zara.com/',
-      'Origin': 'https://www.zara.com',
+      'Cache-Control': 'no-cache',
     };
   }
 
+  // ─── Exchange Rates ────────────────────────────────────────────────────────
+
   Future<void> updateExchangeRates() async {
-    // Skip if rates were fetched less than 10 minutes ago
     if (_ratesLastFetched != null &&
         DateTime.now().difference(_ratesLastFetched!).inMinutes < 10) {
       return;
@@ -48,200 +49,259 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = response.data;
         Map<String, dynamic>? rates;
-
         if (data is String) {
-          final Map<String, dynamic> jsonMap = json.decode(data);
-          rates = jsonMap['rates'] as Map<String, dynamic>?;
+          rates = (json.decode(data) as Map<String, dynamic>?)?['rates'] as Map<String, dynamic>?;
         } else if (data is Map) {
           rates = data['rates'] as Map<String, dynamic>?;
         }
-
         if (rates != null) {
           for (final entry in rates.entries) {
-            final val = entry.value;
-            if (val is num) {
-              _exchangeRates[entry.key] = val.toDouble();
+            if (entry.value is num) {
+              _exchangeRates[entry.key] = (entry.value as num).toDouble();
             }
           }
-          debugPrint('[ApiService] Exchange rates updated: ${_exchangeRates.keys.join(', ')}');
           _ratesLastFetched = DateTime.now();
+          debugPrint('[ApiService] Rates updated: ${_exchangeRates.keys.join(', ')}');
         }
       }
     } catch (e) {
-      debugPrint('[ApiService] Exchange rate fetch failed (using defaults): $e');
+      debugPrint('[ApiService] Rate fetch failed (using defaults): $e');
     }
   }
 
   double getRate(String iso) => _exchangeRates[iso] ?? 1.0;
 
-  /// Returns the URL to navigate to for the WebView extraction.
+  // ─── Search URL builder (used for WebView navigation on mobile) ───────────
+
   String getSearchUrl(Country country, String brand, String id) {
-    if (brand == 'decathlon') {
-      return 'https://www.${country.decathlonDomain}/search?Ntt=$id';
-    } else if (brand == 'zara') {
-      // Navigate to the search page so the WebView can load the product list
-      return 'https://www.zara.com/${country.zaraPath}/search?searchTerm=${Uri.encodeComponent(id)}';
-    } else if (brand == 'jdsports') {
-      return 'https://www.${country.jdDomain}/search/${Uri.encodeComponent(id)}';
-    } else if (brand == 'amazon') {
-      return 'https://www.${country.amazonDomain}/s?k=${Uri.encodeComponent(id)}';
-    } else if (brand == 'ikea') {
-      return 'https://www.ikea.com/${country.ikeaPath}/search/?q=${Uri.encodeComponent(id)}';
-    } else if (brand == 'sephora') {
-      return 'https://www.${country.sephoraDomain}/search?q=${Uri.encodeComponent(id)}';
+    switch (brand) {
+      case 'decathlon':
+        return 'https://www.${country.decathlonDomain}/search?Ntt=$id';
+      case 'zara':
+        return 'https://www.zara.com/${country.zaraPath}/search?searchTerm=${Uri.encodeComponent(id)}';
+      case 'jdsports':
+        return 'https://www.${country.jdDomain}/search/${Uri.encodeComponent(id)}';
+      case 'amazon':
+        return 'https://www.${country.amazonDomain}/s?k=${Uri.encodeComponent(id)}';
+      case 'ikea':
+        return 'https://www.ikea.com/${country.ikeaPath}/search/?q=${Uri.encodeComponent(id)}';
+      case 'sephora':
+        return 'https://www.${country.sephoraDomain}/search?q=${Uri.encodeComponent(id)}';
+      default:
+        return '';
+    }
+  }
+
+  // ─── Zara — Product page fetch + JSON-LD parsing ────────────────────────────
+  //
+  // Strategy:
+  //  1. If we have the product slug (from URL extraction), build the exact product
+  //     page URL per country. Zara reuses the same slug across all locales —
+  //     only the locale prefix changes.
+  //     e.g. /fr/fr/pantalon-lin-p05070902.html → /es/es/pantalon-lin-p05070902.html
+  //  2. Fall back to search page.
+  //  3. Fetch via allorigins.win (web) or direct HTTP (mobile).
+  //  4. Parse JSON-LD structured data (<script type="application/ld+json">) or
+  //     embedded state JSON for the price.
+
+  Future<double?> fetchZaraPrice(
+    Country country,
+    String productId, {
+    String? zaraSlug,
+  }) async {
+    // Build the target URL for this country
+    final locale = country.zaraPath; // e.g. "fr/fr"
+
+    final urls = <String>[];
+    if (zaraSlug != null && zaraSlug.isNotEmpty) {
+      // Primary: direct product page (most reliable — contains JSON-LD)
+      urls.add('https://www.zara.com/$locale/$zaraSlug');
+    }
+    // Secondary: search results page
+    urls.add('https://www.zara.com/$locale/search?searchTerm=${Uri.encodeComponent(productId)}');
+
+    for (final targetUrl in urls) {
+      final body = await _fetchWithProxy(targetUrl);
+      if (body == null) continue;
+
+      final price = _parseZaraPage(body, country.currency);
+      if (price != null) {
+        debugPrint('[ApiService] Zara ✓ ${country.name}: $price (from $targetUrl)');
+        return price;
+      }
+      debugPrint('[ApiService] Zara - ${country.name}: no price in response from $targetUrl');
+    }
+
+    return null;
+  }
+
+  /// Fetch HTML/JSON from a URL.
+  /// On web: wraps with allorigins.win CORS proxy (falls back to corsproxy.io).
+  /// On mobile: direct HTTP request.
+  Future<String?> _fetchWithProxy(String targetUrl) async {
+    if (kIsWeb) {
+      // Try allorigins.win first — reliable, no special headers needed
+      final proxies = [
+        'https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}',
+        'https://corsproxy.io/?${Uri.encodeComponent(targetUrl)}',
+        'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(targetUrl)}',
+      ];
+
+      for (final proxyUrl in proxies) {
+        try {
+          final resp = await _zaraDio.get(proxyUrl);
+          if (resp.statusCode == 200) {
+            final body = resp.data.toString();
+            if (body.length > 500 && !_isBlocked(body)) {
+              return body;
+            }
+          }
+        } catch (e) {
+          debugPrint('[ApiService] Proxy failed ($proxyUrl): $e');
+        }
+      }
+      return null;
     } else {
-      return '';
+      // Mobile: direct fetch
+      try {
+        final resp = await _zaraDio.get(targetUrl);
+        if (resp.statusCode == 200) {
+          final body = resp.data.toString();
+          if (!_isBlocked(body)) return body;
+        }
+      } catch (e) {
+        debugPrint('[ApiService] Direct fetch failed ($targetUrl): $e');
+      }
+      return null;
     }
   }
 
-  // ─── Zara product API (primary for Zara) ────────────────────────────────────
+  /// Parse a Zara page (product page or search results) for a price.
+  double? _parseZaraPage(String html, String currency) {
+    if (html.isEmpty || html.length < 200) return null;
 
-  /// Fetches the price for a Zara product using their internal JSON API.
-  /// productId format: "1234/567" or "1234/567/890"
-  Future<double?> fetchZaraPrice(Country country, String productId) async {
-    // Zara internal API uses numeric part only (remove slashes)
-    // e.g. "1234/567" → try the API endpoint
-    // The API URL format: https://www.zara.com/{locale}/product/{numericId}/detail.json
-    // Where numericId is the joined digits. Try both with and without trailing part.
-    
-    final parts = productId.replaceAll('/', '');
-    final localeStr = country.zaraPath; // e.g. "fr/fr"
-
-    // Try Zara's catalog search API first (more reliable)
-    // Format: https://www.zara.com/{locale}/search?searchTerm=XXXX%2FYYY&ajax=true
-    try {
-      String apiUrl;
-      if (kIsWeb) {
-        apiUrl = 'https://corsproxy.io/?${Uri.encodeComponent('https://www.zara.com/$localeStr/search?searchTerm=${Uri.encodeComponent(productId)}&ajax=true')}';
-      } else {
-        apiUrl = 'https://www.zara.com/$localeStr/search?searchTerm=${Uri.encodeComponent(productId)}&ajax=true';
-      }
-
-      final response = await _zaraDio.get(apiUrl);
-      if (response.statusCode == 200) {
-        final rawData = response.data;
-        final jsonData = rawData is String ? json.decode(rawData) : rawData;
-
-        final price = _parseZaraJsonPrice(jsonData, country);
-        if (price != null) {
-          debugPrint('[ApiService] Zara AJAX API price for ${country.name}: $price');
+    // ── 1. JSON-LD structured data ──────────────────────────────────────────
+    // Zara product pages include schema.org Product markup with price.
+    // This is the most reliable source.
+    final jsonLdRegex = RegExp(
+      '<script[^>]+type=["\']application/ld\\+json["\'][^>]*>(.*?)</script>',
+      dotAll: true,
+      caseSensitive: false,
+    );
+    for (final match in jsonLdRegex.allMatches(html)) {
+      try {
+        final raw = match.group(1)!.trim();
+        final data = json.decode(raw);
+        final price = _extractPriceFromLdJson(data);
+        if (price != null && price > 0.5 && price < 10000) {
+          debugPrint('[ApiService] JSON-LD price: $price');
           return price;
         }
-      }
-    } catch (e) {
-      debugPrint('[ApiService] Zara AJAX search failed for ${country.name}: $e');
+      } catch (_) {}
     }
 
-    // Fallback: Zara product detail JSON API
-    try {
-      // Build numeric ID from the product ref
-      final numericId = parts.isNotEmpty ? parts : productId;
-      String detailUrl;
-      if (kIsWeb) {
-        detailUrl = 'https://corsproxy.io/?${Uri.encodeComponent('https://www.zara.com/$localeStr/product/$numericId/detail.json')}';
-      } else {
-        detailUrl = 'https://www.zara.com/$localeStr/product/$numericId/detail.json';
-      }
-      
-      final response = await _zaraDio.get(detailUrl);
-      if (response.statusCode == 200) {
-        final rawData = response.data;
-        final jsonData = rawData is String ? json.decode(rawData) : rawData;
-        final price = _parseZaraDetailJson(jsonData);
-        if (price != null) {
-          debugPrint('[ApiService] Zara detail JSON price for ${country.name}: $price');
-          return price;
+    // ── 2. Embedded integer prices (Zara state JSON uses cents) ─────────────
+    // Pattern: "price":3995  →  39.95 €
+    // Only trust values that look like cents (4-6 digit integers, no decimals)
+    final centPatterns = [
+      RegExp(r'"price"\s*:\s*(\d{3,6})(?![.\d])'),
+      RegExp(r'"salePrice"\s*:\s*(\d{3,6})(?![.\d])'),
+      RegExp(r'"currentPrice"\s*:\s*(\d{3,6})(?![.\d])'),
+      RegExp(r'"amount"\s*:\s*(\d{3,6})(?![.\d])'),
+    ];
+
+    final centCandidates = <double>[];
+    for (final pattern in centPatterns) {
+      for (final m in pattern.allMatches(html)) {
+        final val = int.tryParse(m.group(1)!);
+        // Cents: must be > 200 (2€) and < 99900 (999€), avoid page-size numbers
+        if (val != null && val > 200 && val < 99900) {
+          centCandidates.add(val / 100.0);
         }
       }
-    } catch (e) {
-      debugPrint('[ApiService] Zara detail JSON failed for ${country.name}: $e');
+    }
+    if (centCandidates.isNotEmpty) {
+      centCandidates.sort();
+      debugPrint('[ApiService] Cent-price candidates: $centCandidates');
+      return centCandidates.first;
     }
 
-    return null;
+    // ── 3. Standard decimal price strings in JSON/HTML ──────────────────────
+    final decimalPatterns = [
+      RegExp(r'"price"\s*:\s*"(\d{1,5}[.,]\d{2})"'),
+      RegExp(r'"lowPrice"\s*:\s*"?(\d{1,5}[.,]\d{2})"?'),
+      RegExp(r'"regularPrice"\s*:\s*"?(\d{1,5}[.,]\d{2})"?'),
+    ];
+    for (final pattern in decimalPatterns) {
+      final m = pattern.firstMatch(html);
+      if (m != null) {
+        final val = double.tryParse(m.group(1)!.replaceAll(',', '.'));
+        if (val != null && val > 0.5 && val < 10000) return val;
+      }
+    }
+
+    // ── 4. Meta tag price ───────────────────────────────────────────────────
+    final metaMatch = RegExp(
+      '<meta[^>]+(?:property|name)=["\'](?:product:price:amount|og:price:amount)["\'][^>]+content=["\']([\\d.,]+)["\']',
+      caseSensitive: false,
+    ).firstMatch(html);
+    if (metaMatch != null) {
+      final val = double.tryParse(metaMatch.group(1)!.replaceAll(',', '.'));
+      if (val != null && val > 0) return val;
+    }
+
+    // ── 5. General price regex fallback ─────────────────────────────────────
+    return parsePriceFromHtml(html, currency: currency);
   }
 
-  double? _parseZaraJsonPrice(dynamic jsonData, Country country) {
-    try {
-      if (jsonData is Map) {
-        // Check productGroups → elements → commercialComponents → price
-        final groups = jsonData['productGroups'];
-        if (groups is List && groups.isNotEmpty) {
-          for (final group in groups) {
-            if (group is Map) {
-              final elements = group['elements'];
-              if (elements is List) {
-                for (final el in elements) {
-                  if (el is Map) {
-                    final components = el['commercialComponents'];
-                    if (components is List) {
-                      for (final comp in components) {
-                        if (comp is Map && comp['prices'] is List) {
-                          final prices = comp['prices'] as List;
-                          for (final p in prices) {
-                            if (p is Map) {
-                              final amount = p['amount'] ?? p['oldAmount'];
-                              if (amount is num && amount > 0) {
-                                return amount / 100.0;
-                              }
-                            }
-                          }
-                        }
-                        if (comp is Map && comp['price'] != null) {
-                          final rawPrice = comp['price'];
-                          if (rawPrice is num) return rawPrice / 100.0;
-                          if (rawPrice is String) return double.tryParse(rawPrice.replaceAll(',', '.'));
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+  /// Recursively extract price from JSON-LD data.
+  double? _extractPriceFromLdJson(dynamic data) {
+    if (data is List) {
+      for (final item in data) {
+        final p = _extractPriceFromLdJson(item);
+        if (p != null) return p;
       }
-    } catch (e) {
-      debugPrint('[ApiService] Zara JSON parse error: $e');
     }
-    return null;
-  }
-
-  double? _parseZaraDetailJson(dynamic jsonData) {
-    try {
-      if (jsonData is Map) {
-        final product = jsonData['product'] ?? jsonData;
-        if (product is Map) {
-          final price = product['price'];
-          if (price is num) return price / 100.0;
-          
-          final detail = product['detail'];
-          if (detail is Map) {
-            final colors = detail['colors'];
-            if (colors is List && colors.isNotEmpty) {
-              final firstColor = colors.first;
-              if (firstColor is Map) {
-                final sizes = firstColor['sizes'];
-                if (sizes is List && sizes.isNotEmpty) {
-                  final size = sizes.first;
-                  if (size is Map && size['price'] is num) {
-                    return (size['price'] as num) / 100.0;
-                  }
-                }
-              }
-            }
-          }
+    if (data is Map) {
+      final type = data['@type'];
+      if (type == 'Product' || type == 'Offer') {
+        // Direct price field
+        final rawPrice = data['price'];
+        if (rawPrice is num && rawPrice > 0) return rawPrice.toDouble();
+        if (rawPrice is String) {
+          final val = double.tryParse(rawPrice.replaceAll(',', '.'));
+          if (val != null && val > 0) return val;
+        }
+        // lowPrice / highPrice
+        final lowPrice = data['lowPrice'];
+        if (lowPrice is num && lowPrice > 0) return lowPrice.toDouble();
+        if (lowPrice is String) {
+          final val = double.tryParse(lowPrice.replaceAll(',', '.'));
+          if (val != null && val > 0) return val;
         }
       }
-    } catch (e) {
-      debugPrint('[ApiService] Zara detail parse error: $e');
+
+      // Recurse into offers / nested objects
+      for (final key in ['offers', 'makesOffer', 'priceSpecification']) {
+        if (data.containsKey(key)) {
+          final p = _extractPriceFromLdJson(data[key]);
+          if (p != null) return p;
+        }
+      }
+
+      // Recurse into any map/list values
+      for (final val in data.values) {
+        if (val is Map || val is List) {
+          final p = _extractPriceFromLdJson(val);
+          if (p != null) return p;
+        }
+      }
     }
     return null;
   }
 
-  // ─── Direct HTTP fetch (general fallback) ────────────────────────────────────
+  // ─── General HTTP fetch (non-Zara brands) ─────────────────────────────────
 
-  /// Direct HTTP fetch with a single retry — used as a secondary fallback only.
-  /// The primary extraction path is the WebView (JS injection).
   Future<String?> fetchHtmlDirect(String targetUrl) async {
     try {
       String url = targetUrl;
@@ -252,10 +312,8 @@ class ApiService {
       if (response.statusCode == 200) {
         final html = response.data.toString();
         if (!_isBlocked(html)) {
-          debugPrint('[ApiService] Direct fetch OK for $targetUrl (${html.length} chars)');
           return html;
         }
-        debugPrint('[ApiService] Direct fetch BLOCKED for $targetUrl');
       }
     } catch (e) {
       debugPrint('[ApiService] Direct fetch FAILED for $targetUrl: $e');
@@ -264,20 +322,19 @@ class ApiService {
   }
 
   bool _isBlocked(String html) {
+    if (html.length < 200) return true;
     final lower = html.toLowerCase();
-    // Only flag truly blocked responses — not short legitimate pages
-    return lower.contains('captcha') || 
-           lower.contains('access denied') || 
-           lower.contains('perimeterx') ||
-           lower.contains('challenge-platform') ||
-           html.length < 200;
+    return lower.contains('captcha') ||
+        lower.contains('access denied') ||
+        lower.contains('perimeterx') ||
+        lower.contains('challenge-platform') ||
+        lower.contains('blocked') ||
+        lower.contains('robot');
   }
 
   Future<double?> fetchPrice(Country country, String brand, String id) async {
-    // Zara: always use the dedicated JSON API
-    if (brand == 'zara') {
-      return fetchZaraPrice(country, id);
-    }
+    // Zara always uses the dedicated page-fetch approach
+    if (brand == 'zara') return null;
 
     final url = getSearchUrl(country, brand, id);
     try {
@@ -290,72 +347,57 @@ class ApiService {
     }
   }
 
+  // ─── Price string parser ────────────────────────────────────────────────────
+
   double? parsePriceFromHtml(String rawInput, {String? currency}) {
     if (rawInput.isEmpty) return null;
-    
-    // If the input is SHORT (< 100 chars), it's a direct price string from WebView JS
-    if (rawInput.length < 100) {
-       var clean = rawInput.trim();
-       debugPrint('[ApiService] Parsing short price string: "$clean" (currency: $currency)');
-       
-       // HUF (Hungary): No decimals, dot/space are thousands separators
-       // e.g. "12.990 Ft" or "12 990" → 12990
-       if (currency == 'Ft' || currency == 'HUF') {
-          clean = clean.replaceAll(RegExp(r'[^\d]'), '');
-          return double.tryParse(clean);
-       }
-       
-       // CZK (Czech): Uses space as thousands separator, comma for decimals
-       // e.g. "1 299,00 Kč" → 1299.00
-       if (currency == 'Kč' || currency == 'CZK') {
-          clean = clean.replaceAll(RegExp(r'[^\d,.]'), ''); // Remove non-numeric except , and .
-          // If the comma/dot is followed by exactly 3 digits, it's a thousands separator: remove it
-          if (RegExp(r'[,.]\d{3}$').hasMatch(clean)) {
-            clean = clean.replaceAll(RegExp(r'[,.]'), '');
-          } else if (clean.contains(',')) {
-            clean = clean.replaceAll('.', '').replaceAll(',', '.');
-          }
-          return double.tryParse(clean);
-       }
 
-       // Standard (EUR, PLN, GBP, RON, etc): Handle 12,99 or 12.99
-       clean = clean.replaceAll(RegExp(r'[^\d.,]'), '');
-       
-       // Handle European format: 1.299,99 → 1299.99
-       if (clean.contains(',') && clean.contains('.')) {
-         // If comma comes after dot, comma is decimal: 1.299,99
-         if (clean.lastIndexOf(',') > clean.lastIndexOf('.')) {
-           clean = clean.replaceAll('.', '').replaceAll(',', '.');
-         }
-         // else dot is decimal: 1,299.99 — just remove commas
-         else {
-           clean = clean.replaceAll(',', '');
-         }
-       } else {
-         clean = clean.replaceAll(',', '.');
-       }
-       
-       final result = double.tryParse(clean);
-       debugPrint('[ApiService] Parsed price: $result');
-       return result;
+    // Short input = direct price string from WebView JS extraction
+    if (rawInput.length < 100) {
+      var clean = rawInput.trim();
+      debugPrint('[ApiService] Parsing short: "$clean" (currency: $currency)');
+
+      if (currency == 'Ft' || currency == 'HUF') {
+        clean = clean.replaceAll(RegExp(r'[^\d]'), '');
+        return double.tryParse(clean);
+      }
+      if (currency == 'Kč' || currency == 'CZK') {
+        clean = clean.replaceAll(RegExp(r'[^\d,.]'), '');
+        if (RegExp(r'[,.]\d{3}$').hasMatch(clean)) {
+          clean = clean.replaceAll(RegExp(r'[,.]'), '');
+        } else if (clean.contains(',')) {
+          clean = clean.replaceAll('.', '').replaceAll(',', '.');
+        }
+        return double.tryParse(clean);
+      }
+
+      clean = clean.replaceAll(RegExp(r'[^\d.,]'), '');
+      if (clean.contains(',') && clean.contains('.')) {
+        if (clean.lastIndexOf(',') > clean.lastIndexOf('.')) {
+          clean = clean.replaceAll('.', '').replaceAll(',', '.');
+        } else {
+          clean = clean.replaceAll(',', '');
+        }
+      } else {
+        clean = clean.replaceAll(',', '.');
+      }
+      return double.tryParse(clean);
     }
 
-    // Full HTML fallback
+    // Full HTML: structured extraction
     final priceStr = _parsePrice(rawInput);
     if (priceStr != null) {
       if (currency == 'Ft' || currency == 'HUF') {
-         final hufClean = priceStr.replaceAll(RegExp(r'[^\d]'), '');
-         return double.tryParse(hufClean);
+        return double.tryParse(priceStr.replaceAll(RegExp(r'[^\d]'), ''));
       }
       if (currency == 'Kč' || currency == 'CZK') {
-         var czkClean = priceStr.replaceAll(RegExp(r'[^\d,.]'), '');
-         // If the comma/dot is followed by exactly 3 digits, it's a thousands separator: remove it
-         if (RegExp(r'[,.]\d{3}$').hasMatch(czkClean)) {
-           czkClean = czkClean.replaceAll(RegExp(r'[,.]'), '');
-         } else if (czkClean.contains(',')) {
-           czkClean = czkClean.replaceAll('.', '').replaceAll(',', '.');
-         }
-         return double.tryParse(czkClean);
+        var s = priceStr.replaceAll(RegExp(r'[^\d,.]'), '');
+        if (RegExp(r'[,.]\d{3}$').hasMatch(s)) {
+          s = s.replaceAll(RegExp(r'[,.]'), '');
+        } else if (s.contains(',')) {
+          s = s.replaceAll('.', '').replaceAll(',', '.');
+        }
+        return double.tryParse(s);
       }
       return double.tryParse(priceStr);
     }
@@ -364,40 +406,33 @@ class ApiService {
 
   String? _parsePrice(String html) {
     if (html.isEmpty) return null;
-    final cleanHtml = html.replaceAll(RegExp(r'\s+'), ' ');
+    final clean = html.replaceAll(RegExp(r'\s+'), ' ');
 
-    // 1. JSON-LD (Most reliable for structured price data)
-    final jsonLdMatch = RegExp(r'"price"\s*:\s*"?(\d+[.,]\d{1,2})"?').firstMatch(cleanHtml);
-    if (jsonLdMatch != null) return jsonLdMatch.group(1)?.replaceAll(',', '.');
+    final jsonLd = RegExp(r'"price"\s*:\s*"?(\d+[.,]\d{1,2})"?').firstMatch(clean);
+    if (jsonLd != null) return jsonLd.group(1)?.replaceAll(',', '.');
 
-    // 2. lowPrice in JSON-LD offers
-    final lowPriceMatch = RegExp(r'"lowPrice"\s*:\s*"?(\d+[.,]\d{1,2})"?').firstMatch(cleanHtml);
-    if (lowPriceMatch != null) return lowPriceMatch.group(1)?.replaceAll(',', '.');
+    final lowPrice = RegExp(r'"lowPrice"\s*:\s*"?(\d+[.,]\d{1,2})"?').firstMatch(clean);
+    if (lowPrice != null) return lowPrice.group(1)?.replaceAll(',', '.');
 
-    // 3. Meta tag (Standard OpenGraph/Schema)
-    final metaMatch = RegExp(r'meta property="product:price:amount" content="([\d.]+)"', caseSensitive: false).firstMatch(cleanHtml);
-    if (metaMatch != null) return metaMatch.group(1);
+    final meta = RegExp(
+      r'meta property="product:price:amount" content="([\d.]+)"',
+      caseSensitive: false,
+    ).firstMatch(clean);
+    if (meta != null) return meta.group(1);
 
-    // 4. Fallback: Regex to find all price-like patterns
-    List<double> foundPrices = [];
     const currencySymbols = r'€|EUR|£|GBP|\$|zł|PLN|lei|RON|Ft|HUF|Kč|CZK';
     final regex = RegExp(
-        '(?:($currencySymbols)\\s*(\\d+[.,]\\d{1,2}))|(?:(\\d+[.,]\\d{1,2})\\s*($currencySymbols))',
-        caseSensitive: false);
-    
-    final matches = regex.allMatches(cleanHtml);
-    for (final m in matches) {
-       final valStr = (m.group(2) ?? m.group(3))?.replaceAll(',', '.');
-       if (valStr != null) {
-         final val = double.tryParse(valStr);
-         if (val != null && val > 0) foundPrices.add(val);
-       }
+      '(?:($currencySymbols)\\s*(\\d+[.,]\\d{1,2}))|(?:(\\d+[.,]\\d{1,2})\\s*($currencySymbols))',
+      caseSensitive: false,
+    );
+
+    final prices = <double>[];
+    for (final m in regex.allMatches(clean)) {
+      final val = double.tryParse((m.group(2) ?? m.group(3))?.replaceAll(',', '.') ?? '');
+      if (val != null && val > 0) prices.add(val);
     }
-
-    if (foundPrices.isEmpty) return null;
-
-    // Return the lowest price found as last resort
-    foundPrices.sort();
-    return foundPrices.first.toStringAsFixed(2);
+    if (prices.isEmpty) return null;
+    prices.sort();
+    return prices.first.toStringAsFixed(2);
   }
 }

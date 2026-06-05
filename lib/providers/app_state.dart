@@ -21,6 +21,10 @@ class AppState extends ChangeNotifier {
   String? _productId;
   String? get productId => _productId;
 
+  /// For Zara: stores the product page slug (e.g. "pantalon-lin-p05070902.html")
+  /// so we can build per-country product URLs for reliable price fetching.
+  String? _zaraSlug;
+
   String _error = '';
   String get error => _error;
 
@@ -29,7 +33,7 @@ class AppState extends ChangeNotifier {
 
   bool _isScanning = false;
   bool get isScanning => _isScanning;
-  
+
   /// The country currently being scanned (for UI progress indication)
   String? _currentScanCountryCode;
   String? get currentScanCountryCode => _currentScanCountryCode;
@@ -63,12 +67,14 @@ class AppState extends ChangeNotifier {
     _manualId = '';
     _isScanning = false;
     _currentScanCountryCode = null;
+    _zaraSlug = null;
     _cancelHeadless();
   }
-  
+
   void restoreFromHistory(ScanHistoryItem item) {
     _brand = Brand.fromKey(item.brand);
     _productId = item.productId;
+    _zaraSlug = null;
     _prices = {};
     _error = '';
     for (var entry in item.prices.entries) {
@@ -85,6 +91,7 @@ class AppState extends ChangeNotifier {
     _prices = {};
     _isScanning = false;
     _currentScanCountryCode = null;
+    _zaraSlug = null;
 
     String? foundId;
 
@@ -190,6 +197,18 @@ class AppState extends ChangeNotifier {
         if (looseMatch != null) return looseMatch.group(0);
 
       case Brand.zara:
+        // ── Extract slug from full product URL for reliable per-country fetching ──
+        // e.g. zara.com/fr/fr/pantalon-linen-p05070902.html → slug = pantalon-linen-p05070902.html
+        final slugMatch = RegExp(
+          r'zara\.com/[^/]+/[^/]+/([^?#]+\.html)',
+          caseSensitive: false,
+        ).firstMatch(text);
+        if (slugMatch != null) {
+          _zaraSlug = slugMatch.group(1)!;
+          debugPrint('[AppState] Zara slug captured: $_zaraSlug');
+        }
+
+        // Clean product reference for display (4-digit/3-digit format)
         final directMatch = RegExp(r'(\d{4}\/\d{3}(?:\/\d{3})?)').firstMatch(text);
         if (directMatch != null) return directMatch.group(1);
         final p0Match = RegExp(r'p0(\d{7})').firstMatch(text);
@@ -240,7 +259,7 @@ class AppState extends ChangeNotifier {
 
   /// The URL the headless WebView should currently load
   String? headlessUrl;
-  
+
   /// Completer that the WebView resolves when it extracts a price
   Completer<String?>? _headlessCompleter;
 
@@ -281,17 +300,24 @@ class AppState extends ChangeNotifier {
     try {
       double? price;
 
-      // ── Strategy A (Zara): Use dedicated JSON API (most reliable for Zara) ──
+      // ── Strategy A (Zara): Dedicated HTTP/JSON approach — no WebView needed ──
       if (brand.key == 'zara') {
-        price = await _api.fetchZaraPrice(country, productId!);
+        price = await _api.fetchZaraPrice(
+          country,
+          productId!,
+          zaraSlug: _zaraSlug,
+        );
         if (price != null) {
-          debugPrint('[AppState] Zara API price for ${country.name}: $price');
+          debugPrint('[AppState] Zara price for ${country.name}: $price');
         }
       }
 
       // ── Strategy B: WebView JS extraction (primary for non-Zara on mobile) ──
       if (price == null && !kIsWeb && brand.key != 'zara') {
-        headlessUrl = _api.getSearchUrl(country, brand.key, productId!);
+        // For Zara on mobile with slug, navigate to the product page directly
+        headlessUrl = (brand.key == 'zara' && _zaraSlug != null)
+            ? 'https://www.zara.com/${country.zaraPath}/$_zaraSlug'
+            : _api.getSearchUrl(country, brand.key, productId!);
         _headlessCompleter = Completer<String?>();
         notifyListeners(); // Triggers WebView rebuild with new URL
 
@@ -333,8 +359,8 @@ class AppState extends ChangeNotifier {
         }
       }
 
-      // ── Strategy C: Direct HTTP fallback (for sites that serve static HTML) ──
-      if (price == null && _isScanning) {
+      // ── Strategy C: Direct HTTP fallback (for non-Zara static sites) ──
+      if (price == null && _isScanning && brand.key != 'zara') {
         debugPrint('[AppState] Trying HTTP fallback for ${country.name}...');
         price = await _api.fetchPrice(country, brand.key, productId!);
         if (price != null) {
@@ -376,7 +402,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> scanAll() async {
     if (productId == null || isScanning) return;
-    
+
     _isScanning = true;
     _error = '';
     notifyListeners();
@@ -384,16 +410,14 @@ class AppState extends ChangeNotifier {
     await _api.updateExchangeRates();
 
     if (kIsWeb || brand.key == 'zara') {
-      // On Web or for Zara (which uses JSON API), run all scans concurrently
+      // On Web or for Zara (JSON API — no WebView bottleneck), run concurrently
       final futures = kCountries.map((country) => _scanSingleCountry(country)).toList();
       await Future.wait(futures);
     } else {
-      // On Mobile/Desktop, run sequentially to avoid overlapping WebViews
+      // On Mobile/Desktop for non-Zara, run sequentially to avoid overlapping WebViews
       for (var country in kCountries) {
         if (!_isScanning) break;
-
         await _scanSingleCountry(country);
-
         if (_isScanning) {
           await Future.delayed(Duration(milliseconds: 200 + Random().nextInt(200)));
         }
@@ -430,9 +454,9 @@ class AppState extends ChangeNotifier {
     _cancelHeadless();
     notifyListeners();
   }
-  
+
   ApiService get api => _api;
-  
+
   double? getConvertedPrice(Country country, String? priceStr) {
     if (priceStr == null) return null;
     try {
