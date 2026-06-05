@@ -325,8 +325,8 @@ class AppState extends ChangeNotifier {
         }
       }
 
-      // ── Strategy B: WebView JS extraction (primary for non-Zara on mobile) ──
-      if (price == null && !kIsWeb && brand.key != 'zara') {
+      // ── Strategy B: WebView JS extraction (primary for non-Zara or fallback on mobile/desktop) ──
+      if (price == null && !kIsWeb) {
         // For Zara on mobile with slug, navigate to the product page directly
         headlessUrl = (brand.key == 'zara' && _zaraSlug != null)
             ? 'https://www.zara.com/${country.zaraPath}/$_zaraSlug'
