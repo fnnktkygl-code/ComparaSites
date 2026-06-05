@@ -420,29 +420,33 @@ class AppState extends ChangeNotifier {
     _error = '';
     notifyListeners();
 
-    await _api.updateExchangeRates();
+    try {
+      await _api.updateExchangeRates();
 
-    if (kIsWeb || brand.key == 'zara') {
-      // On Web or for Zara (JSON API — no WebView bottleneck), run concurrently
-      final futures = kCountries.map((country) => _scanSingleCountry(country)).toList();
-      await Future.wait(futures);
-    } else {
-      // On Mobile/Desktop for non-Zara, run sequentially to avoid overlapping WebViews
-      for (var country in kCountries) {
-        if (!_isScanning) break;
-        await _scanSingleCountry(country);
-        if (_isScanning) {
-          await Future.delayed(Duration(milliseconds: 200 + Random().nextInt(200)));
+      if (kIsWeb || brand.key == 'zara') {
+        // On Web or for Zara (JSON API — no WebView bottleneck), run concurrently
+        final futures = kCountries.map((country) => _scanSingleCountry(country)).toList();
+        await Future.wait(futures);
+      } else {
+        // On Mobile/Desktop for non-Zara, run sequentially to avoid overlapping WebViews
+        for (var country in kCountries) {
+          if (!_isScanning) break;
+          await _scanSingleCountry(country);
+          if (_isScanning) {
+            await Future.delayed(Duration(milliseconds: 200 + Random().nextInt(200)));
+          }
         }
       }
+    } catch (e, stack) {
+      debugPrint('[AppState] scanAll error: $e\n$stack');
+    } finally {
+      // Cleanup
+      _cancelHeadless();
+      _isScanning = false;
+      _currentScanCountryCode = null;
+      _saveToHistory();
+      notifyListeners();
     }
-
-    // Cleanup
-    _cancelHeadless();
-    _isScanning = false;
-    _currentScanCountryCode = null;
-    _saveToHistory();
-    notifyListeners();
   }
 
   Future<void> scanCountry(Country country) async {
@@ -451,14 +455,18 @@ class AppState extends ChangeNotifier {
     _isScanning = true;
     notifyListeners();
 
-    await _api.updateExchangeRates();
-    await _scanSingleCountry(country);
-
-    _cancelHeadless();
-    _isScanning = false;
-    _currentScanCountryCode = null;
-    _saveToHistory();
-    notifyListeners();
+    try {
+      await _api.updateExchangeRates();
+      await _scanSingleCountry(country);
+    } catch (e, stack) {
+      debugPrint('[AppState] scanCountry error: $e\n$stack');
+    } finally {
+      _cancelHeadless();
+      _isScanning = false;
+      _currentScanCountryCode = null;
+      _saveToHistory();
+      notifyListeners();
+    }
   }
 
   void stopScan() {

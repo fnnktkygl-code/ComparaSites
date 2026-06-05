@@ -303,22 +303,44 @@ class ApiService {
   // ─── General HTTP fetch (non-Zara brands) ─────────────────────────────────
 
   Future<String?> fetchHtmlDirect(String targetUrl) async {
-    try {
-      String url = targetUrl;
-      if (kIsWeb) {
-        url = 'https://corsproxy.io/?${Uri.encodeComponent(targetUrl)}';
-      }
-      final response = await _dio.get(url);
-      if (response.statusCode == 200) {
-        final html = response.data.toString();
-        if (!_isBlocked(html)) {
-          return html;
+    if (kIsWeb) {
+      final proxies = [
+        'https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}',
+        'https://corsproxy.io/?${Uri.encodeComponent(targetUrl)}',
+        'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(targetUrl)}',
+      ];
+
+      for (final proxyUrl in proxies) {
+        try {
+          debugPrint('[ApiService] Direct fetch via proxy: $proxyUrl');
+          final response = await _dio.get(proxyUrl);
+          if (response.statusCode == 200) {
+            final html = response.data.toString();
+            if (html.length > 200 && !_isBlocked(html)) {
+              debugPrint('[ApiService] Proxy success: $proxyUrl');
+              return html;
+            }
+          }
+        } catch (e) {
+          debugPrint('[ApiService] Proxy failed ($proxyUrl): $e');
         }
       }
-    } catch (e) {
-      debugPrint('[ApiService] Direct fetch FAILED for $targetUrl: $e');
+      return null;
+    } else {
+      // Mobile/Desktop: direct fetch
+      try {
+        final response = await _dio.get(targetUrl);
+        if (response.statusCode == 200) {
+          final html = response.data.toString();
+          if (!_isBlocked(html)) {
+            return html;
+          }
+        }
+      } catch (e) {
+        debugPrint('[ApiService] Direct fetch FAILED for $targetUrl: $e');
+      }
+      return null;
     }
-    return null;
   }
 
   bool _isBlocked(String html) {
