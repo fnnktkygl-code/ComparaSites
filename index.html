@@ -1,126 +1,303 @@
-<!DOCTYPE html><html><head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="/ComparaSites/">
-
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="compara_sites_mobile">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png">
-
-  <title>compara_sites_mobile</title>
-  <link rel="manifest" href="manifest.json">
-  
-  
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
-  
-  
-  <style id="splash-screen-style">
-    html {
-      height: 100%
-    }
-
-    body {
-      margin: 0;
-      min-height: 100%;
-      background-color: #051024;
-          background-size: 100% 100%;
-    }
-
-    .center {
-      margin: 0;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      -ms-transform: translate(-50%, -50%);
-      transform: translate(-50%, -50%);
-    }
-
-    .contain {
-      display:block;
-      width:100%; height:100%;
-      object-fit: contain;
-    }
-
-    .stretch {
-      display:block;
-      width:100%; height:100%;
-    }
-
-    .cover {
-      display:block;
-      width:100%; height:100%;
-      object-fit: cover;
-    }
-
-    .bottom {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      -ms-transform: translate(-50%, 0);
-      transform: translate(-50%, 0);
-    }
-
-    .bottomLeft {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-    }
-
-    .bottomRight {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      body {
-        background-color: #051024;
-          }
-    }
-  </style>
-  <script id="splash-screen-script">
-    function removeSplashFromWeb() {
-      document.getElementById("splash")?.remove();
-      document.getElementById("splash-branding")?.remove();
-      document.body.style.background = "transparent";
-    }
-  </script>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ComparaSites — Comparez les prix en Europe</title>
+  <meta name="description" content="ComparaSites vous permet de comparer instantanément les prix de Decathlon, Zara, Amazon, IKEA, Sephora et JD Sports dans toute l'Europe. Trouvez les meilleures offres en quelques secondes." />
+  <meta property="og:title" content="ComparaSites — Comparez les prix en Europe" />
+  <meta property="og:description" content="Comparez les prix en temps réel sur 6 grandes enseignes dans 12 pays européens." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="./app/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <picture id="splash-branding">
-    <source srcset="splash/img/branding-1x.png 1x, splash/img/branding-2x.png 2x, splash/img/branding-3x.png 3x, splash/img/branding-4x.png 4x" media="(prefers-color-scheme: light)">
-    <source srcset="splash/img/branding-dark-1x.png 1x, splash/img/branding-dark-2x.png 2x, splash/img/branding-dark-3x.png 3x, splash/img/branding-dark-4x.png 4x" media="(prefers-color-scheme: dark)">
-    <img class="bottom" aria-hidden="true" src="splash/img/branding-1x.png" alt="">
-  </picture>
-  <picture id="splash">
-      <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
-      <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
-      <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
-  </picture>
-  
-  
-  
-  <script src="flutter_bootstrap.js" async=""></script>
 
+  <!-- ══ NAV ══ -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <span class="logo-icon">◈</span>
+        ComparaSites
+      </a>
+      <div class="nav-links">
+        <a href="#features">Fonctionnalités</a>
+        <a href="#brands">Enseignes</a>
+        <a href="#how">Comment ça marche</a>
+        <a href="./app/" class="btn btn-sm" id="nav-cta">Lancer l'app →</a>
+      </div>
+      <button class="nav-burger" id="nav-burger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-mobile" id="nav-mobile">
+      <a href="#features">Fonctionnalités</a>
+      <a href="#brands">Enseignes</a>
+      <a href="#how">Comment ça marche</a>
+      <a href="./app/" class="btn btn-mobile">Lancer l'app →</a>
+    </div>
+  </nav>
 
-</body></html>
+  <!-- ══ HERO ══ -->
+  <section class="hero" id="hero">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Disponible en version Web
+      </div>
+
+      <h1 class="hero-title">
+        Trouvez le meilleur prix<br />
+        <span class="gradient-text">en Europe</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Comparez instantanément les prix de vos enseignes préférées dans 
+        <strong>12 pays européens</strong>. Économisez sur chaque achat.
+      </p>
+
+      <div class="hero-actions">
+        <a href="./app/" class="btn btn-primary btn-large" id="hero-cta">
+          <span class="btn-icon">🚀</span>
+          Lancer l'application Web
+        </a>
+        <a href="https://github.com/fnnktkygl-code/ComparaSites" target="_blank" rel="noopener" class="btn btn-ghost btn-large">
+          <span class="btn-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          </span>
+          Voir le code source
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-value">6</span>
+          <span class="stat-label">Enseignes</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-value">12</span>
+          <span class="stat-label">Pays</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-value">100%</span>
+          <span class="stat-label">Gratuit</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="mockup-glow"></div>
+      <img src="./mockup.png" alt="ComparaSites app mockup" class="hero-mockup" loading="eager" />
+    </div>
+  </section>
+
+  <!-- ══ FEATURES ══ -->
+  <section class="section features-section" id="features">
+    <div class="section-inner">
+      <div class="section-label">Fonctionnalités</div>
+      <h2 class="section-title">Tout ce dont vous avez besoin<br />pour acheter malin</h2>
+      <p class="section-subtitle">Une application conçue pour les acheteurs avisés qui veulent les meilleures offres en Europe.</p>
+
+      <div class="features-grid">
+        <div class="feature-card" data-anim>
+          <div class="feature-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">🔍</div>
+          <h3>Recherche multi-pays</h3>
+          <p>Scannez simultanément 12 pays européens pour trouver où le même produit est le moins cher.</p>
+        </div>
+        <div class="feature-card" data-anim>
+          <div class="feature-icon" style="background:linear-gradient(135deg,#10b981,#059669)">💡</div>
+          <h3>Meilleur prix mis en avant</h3>
+          <p>Un bandeau doré met en avant le pays le moins cher et les économies par rapport à la France.</p>
+        </div>
+        <div class="feature-card" data-anim>
+          <div class="feature-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)">⚡</div>
+          <h3>Scan pays par pays</h3>
+          <p>Rafraîchissez un seul pays sans relancer toute la comparaison. Plus rapide, plus flexible.</p>
+        </div>
+        <div class="feature-card" data-anim>
+          <div class="feature-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626)">📱</div>
+          <h3>Accès direct au site</h3>
+          <p>Appuyez sur une carte prix pour ouvrir directement la page du produit dans votre navigateur.</p>
+        </div>
+        <div class="feature-card" data-anim>
+          <div class="feature-icon" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">📋</div>
+          <h3>Historique des scans</h3>
+          <p>Retrouvez et relancez vos recherches précédentes en un tap depuis l'onglet historique.</p>
+        </div>
+        <div class="feature-card" data-anim>
+          <div class="feature-icon" style="background:linear-gradient(135deg,#ec4899,#db2777)">💱</div>
+          <h3>Conversion automatique</h3>
+          <p>Toutes les devises (PLN, GBP, RON, HUF, CZK...) sont automatiquement converties en EUR.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ BRANDS ══ -->
+  <section class="section brands-section" id="brands">
+    <div class="section-inner">
+      <div class="section-label">Enseignes supportées</div>
+      <h2 class="section-title">6 grandes enseignes,<br />12 pays, un seul outil</h2>
+
+      <div class="brands-grid">
+        <div class="brand-card" data-anim>
+          <div class="brand-logo decathlon">D</div>
+          <div class="brand-info">
+            <h3>Decathlon</h3>
+            <p>Sport & outdoor</p>
+          </div>
+          <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇧🇪 🇵🇹 +</div>
+        </div>
+        <div class="brand-card" data-anim>
+          <div class="brand-logo zara">Z</div>
+          <div class="brand-info">
+            <h3>Zara</h3>
+            <p>Mode & vêtements</p>
+          </div>
+          <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇬🇧 🇵🇱 +</div>
+        </div>
+        <div class="brand-card" data-anim>
+          <div class="brand-logo jd">JD</div>
+          <div class="brand-info">
+            <h3>JD Sports</h3>
+            <p>Sneakers & sport</p>
+          </div>
+          <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇬🇧 🇵🇱</div>
+        </div>
+        <div class="brand-card" data-anim>
+          <div class="brand-logo amazon">A</div>
+          <div class="brand-info">
+            <h3>Amazon</h3>
+            <p>Tout produit</p>
+          </div>
+          <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇬🇧 🇵🇱</div>
+        </div>
+        <div class="brand-card" data-anim>
+          <div class="brand-logo ikea">I</div>
+          <div class="brand-info">
+            <h3>IKEA</h3>
+            <p>Mobilier & déco</p>
+          </div>
+          <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇬🇧 🇵🇱 +</div>
+        </div>
+        <div class="brand-card" data-anim>
+          <div class="brand-logo sephora">S</div>
+          <div class="brand-info">
+            <h3>Sephora</h3>
+            <p>Beauté & cosmétiques</p>
+          </div>
+          <div class="brand-countries">🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇵🇱 🇷🇴</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ HOW IT WORKS ══ -->
+  <section class="section how-section" id="how">
+    <div class="section-inner">
+      <div class="section-label">Comment ça marche</div>
+      <h2 class="section-title">Trouvez le meilleur prix<br />en 3 étapes</h2>
+
+      <div class="steps-grid">
+        <div class="step" data-anim>
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h3>Choisissez une enseigne</h3>
+            <p>Sélectionnez parmi Decathlon, Zara, Amazon, IKEA, Sephora ou JD Sports selon vos besoins.</p>
+          </div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step" data-anim>
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h3>Entrez une référence</h3>
+            <p>Collez l'URL d'un produit ou tapez la référence directement. L'app extrait automatiquement l'ID.</p>
+          </div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step" data-anim>
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h3>Comparez et économisez</h3>
+            <p>Les prix sont triés du moins cher au plus cher. Appuyez sur la carte pour aller acheter.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA SECTION ══ -->
+  <section class="section cta-section">
+    <div class="blob blob-cta-1"></div>
+    <div class="blob blob-cta-2"></div>
+    <div class="cta-inner" data-anim>
+      <h2 class="cta-title">Prêt à économiser<br /><span class="gradient-text">sur vos achats ?</span></h2>
+      <p class="cta-subtitle">Accédez à l'application gratuitement, directement dans votre navigateur. Aucune installation requise.</p>
+      <a href="./app/" class="btn btn-primary btn-large btn-glow" id="footer-cta">
+        <span class="btn-icon">✦</span>
+        Lancer ComparaSites Web
+      </a>
+      <p class="cta-hint">Fonctionne sur ordinateur, tablette et mobile</p>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <span class="logo-icon">◈</span>
+        ComparaSites
+      </div>
+      <p class="footer-desc">Comparateur de prix pour l'Europe. Projet open source.</p>
+      <div class="footer-links">
+        <a href="https://github.com/fnnktkygl-code/ComparaSites" target="_blank" rel="noopener">GitHub</a>
+        <a href="./app/" id="footer-app-link">Application Web</a>
+        <a href="#features">Fonctionnalités</a>
+      </div>
+      <p class="footer-copy">© 2026 ComparaSites. Open Source sous licence MIT.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Nav scroll effect
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('nav-scrolled', window.scrollY > 20);
+    });
+
+    // Mobile menu
+    const burger = document.getElementById('nav-burger');
+    const mobileNav = document.getElementById('nav-mobile');
+    burger.addEventListener('click', () => {
+      mobileNav.classList.toggle('open');
+      burger.classList.toggle('open');
+    });
+    mobileNav.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        mobileNav.classList.remove('open');
+        burger.classList.remove('open');
+      });
+    });
+
+    // Scroll reveal animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('[data-anim]').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
