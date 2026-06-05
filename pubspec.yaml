@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.6
   http: ^1.2.0
   html: ^0.15.4
@@ -21,7 +23,7 @@ dependencies:
   webview_flutter: ^4.7.0
   share_plus: ^9.0.0
   dio: ^5.4.1
-  intl: ^0.19.0
+  intl: ^0.20.2
   shimmer: ^3.0.0
 
 

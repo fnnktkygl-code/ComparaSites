@@ -12,6 +12,8 @@ import '../models/price_result.dart';
 import '../screens/webview_screen.dart';
 import '../widgets/price_card.dart';
 import '../widgets/shimmer_loading.dart';
+import '../l10n/strings.dart';
+import '../theme/app_theme.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -31,48 +33,49 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _showInfoDialog(BuildContext context) {
+    final s = AppStrings.of(context);
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.info_outline, color: Theme.of(context).primaryColor),
+            Icon(Icons.info_outline, color: primary),
             const SizedBox(width: 8),
-            const Text('À propos de ComparaSites'),
+            Text(s.aboutTitle),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'ComparaSites vous permet de comparer les prix des produits à travers différents pays européens pour obtenir le meilleur prix.',
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Recherche supportée pour :\n'
-              '• Decathlon, Zara, JD Sports, Amazon, IKEA et Sephora.',
-              style: TextStyle(height: 1.4),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Note sur la version Web :',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'En raison des restrictions de sécurité CORS des navigateurs, la recherche directe peut être bloquée pour certains magasins. '
-              'Pour une fiabilité de 100% sans restrictions, nous vous recommandons d\'utiliser l\'application native.',
-              style: TextStyle(fontSize: 12, color: Colors.black87, height: 1.3),
+            Text(s.aboutBody, style: const TextStyle(fontWeight: FontWeight.w500)),
+            const SizedBox(height: 12),
+            Text(s.aboutBrands, style: const TextStyle(height: 1.4)),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E2D47) : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                s.aboutWebNote,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? const Color(0xFF94A3B8) : Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
+            child: Text(s.close),
           ),
         ],
       ),
@@ -93,9 +96,11 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final brandColor = state.brand.color;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final s = AppStrings.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppTheme.surfaceColor(context),
       body: Stack(
         children: [
           // ─── Decorative background blobs (wrapped in RepaintBoundary to isolate paint) ───
@@ -110,24 +115,24 @@ class _SearchScreenState extends State<SearchScreen> {
               SliverAppBar(
                 floating: true,
                 pinned: true,
-                backgroundColor: const Color(0xFFF8FAFC).withValues(alpha: 0.8),
+                backgroundColor: AppTheme.surfaceColor(context).withValues(alpha: 0.88),
                 surfaceTintColor: Colors.transparent,
                 elevation: 0,
                 centerTitle: true,
                 title: Text(
-                  'ComparaSites', 
+                  'ComparaSites',
                   style: TextStyle(
-                    fontWeight: FontWeight.w900, 
-                    color: state.brand.useDarkText ? Colors.black : brandColor,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? const Color(0xFFF1F5F9) : (state.brand.useDarkText ? Colors.black : brandColor),
                     fontSize: 22,
                     letterSpacing: -0.5,
-                  )
+                  ),
                 ),
                 actions: [
                   IconButton(
                     icon: Icon(
                       Icons.info_outline,
-                      color: state.brand.useDarkText ? Colors.black : brandColor,
+                      color: isDark ? const Color(0xFF94A3B8) : (state.brand.useDarkText ? Colors.black : brandColor),
                     ),
                     onPressed: () => _showInfoDialog(context),
                   ),
@@ -147,7 +152,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       
                       if (state.productId != null) ...[
                         _buildResultsHeader(context, state, brandColor),
-                        _buildProgressBar(state, brandColor),
+                        _buildProgressBar(context, state, brandColor),
                         const SizedBox(height: 12),
                         _buildSummaryBanner(context, state, brandColor),
                         _buildResultsGrid(context, state),
@@ -159,11 +164,11 @@ class _SearchScreenState extends State<SearchScreen> {
                           padding: const EdgeInsets.only(top: 60),
                           child: Column(
                             children: [
-                              Icon(Icons.manage_search_rounded, size: 80, color: Colors.grey[300]),
+                              Icon(Icons.manage_search_rounded, size: 80, color: AppTheme.mutedText(context)),
                               const SizedBox(height: 16),
                               Text(
-                                "Comparez les prix en Europe",
-                                style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold),
+                                s.compareEurope,
+                                style: TextStyle(color: AppTheme.mutedText(context), fontWeight: FontWeight.bold),
                               )
                             ],
                           ),
@@ -220,6 +225,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _brandSwitchItem(BuildContext context, AppState state, Brand b) {
     final isSelected = state.brand == b;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inactiveBg = isDark ? const Color(0xFF111C30) : Colors.white.withValues(alpha: 0.85);
+    final inactiveBorder = isDark ? const Color(0xFF1E2D47) : Colors.white.withValues(alpha: 0.65);
     return GestureDetector(
       onTap: () {
         state.setBrand(b);
@@ -230,33 +238,27 @@ class _SearchScreenState extends State<SearchScreen> {
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? b.color : Colors.white.withValues(alpha: 0.85),
+          color: isSelected ? b.color : inactiveBg,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? b.color : Colors.white.withValues(alpha: 0.65), 
-            width: 1.5
+            color: isSelected ? b.color : inactiveBorder,
+            width: 1.5,
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: b.color.withValues(alpha: 0.25),
-              blurRadius: 8,
+              color: b.color.withValues(alpha: 0.3),
+              blurRadius: 10,
               offset: const Offset(0, 3),
             )
-          ] : [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            )
-          ],
+          ] : [],
         ),
         child: Text(
           b.label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: isSelected 
-                ? (b.useDarkText ? Colors.black : Colors.white) 
-                : Colors.grey[600],
+            color: isSelected
+                ? (b.useDarkText ? Colors.black : Colors.white)
+                : (isDark ? const Color(0xFF64748B) : Colors.grey.shade600),
             fontSize: 10,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.5,
@@ -267,20 +269,29 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildGlassySearchCard(BuildContext context, AppState state, Color color) {
+    final s = AppStrings.of(context);
     final isUrlMode = state.activeTab == 'url';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark
+        ? const Color(0xFF111C30).withValues(alpha: 0.9)
+        : Colors.white.withValues(alpha: 0.85);
+    final cardBorder = isDark
+        ? const Color(0xFF1E2D47)
+        : Colors.white.withValues(alpha: 0.7);
+    final tabBg = isDark ? const Color(0xFF0D1526) : Colors.grey.shade100;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
+        color: cardBg,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.08),
+            color: color.withValues(alpha: isDark ? 0.12 : 0.08),
             blurRadius: 35,
             offset: const Offset(0, 12),
           ),
         ],
-        border: Border.all(color: Colors.white.withValues(alpha: 0.65), width: 1.5),
+        border: Border.all(color: cardBorder, width: 1.5),
       ),
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -289,58 +300,52 @@ class _SearchScreenState extends State<SearchScreen> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(16)
+              color: tabBg,
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
               children: [
-                Expanded(child: _tabPill(state, 'url', 'Via URL')),
-                Expanded(child: _tabPill(state, 'manual', 'Référence')),
+                Expanded(child: _tabPill(context, state, 'url', s.viaUrl)),
+                Expanded(child: _tabPill(context, state, 'manual', s.reference)),
               ],
             ),
           ),
           const SizedBox(height: 20),
-          
-          // Input with persistent controller + keyboard submit
+
+          // Input
           TextField(
-             controller: _inputController,
-             onChanged: (v) => isUrlMode ? state.setInputUrl(v) : state.setManualId(v),
-             textInputAction: TextInputAction.search,
-             onSubmitted: (_) => _submitSearch(state),
-             style: const TextStyle(fontWeight: FontWeight.w500),
-             decoration: InputDecoration(
-               filled: true,
-               fillColor: Colors.grey[50],
-               hintText: isUrlMode 
-                   ? 'Collez le lien ici...' 
-                   : state.brand.hintText,
-               hintStyle: TextStyle(color: Colors.grey[400]),
-               border: OutlineInputBorder(
-                 borderRadius: BorderRadius.circular(16),
-                 borderSide: BorderSide.none,
-               ),
-               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-               // Dynamic icon: link for URL mode, tag for reference mode
-               prefixIcon: Icon(
-                 isUrlMode ? Icons.link : Icons.sell_outlined,
-                 color: Colors.grey[400],
-               ),
-             ),
+            controller: _inputController,
+            onChanged: (v) => isUrlMode ? state.setInputUrl(v) : state.setManualId(v),
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _submitSearch(state),
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: isDark ? const Color(0xFFE2E8F0) : null,
+            ),
+            decoration: InputDecoration(
+              hintText: isUrlMode ? s.pasteUrl : state.brand.hintText,
+              hintStyle: TextStyle(color: AppTheme.mutedText(context)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              prefixIcon: Icon(
+                isUrlMode ? Icons.link : Icons.sell_outlined,
+                color: AppTheme.mutedText(context),
+              ),
+            ),
           ),
-          
+
           const SizedBox(height: 20),
-          
-          // Button
+
+          // Scan button
           SizedBox(
             width: double.infinity,
             height: 54,
             child: ElevatedButton.icon(
               onPressed: state.isScanning ? null : () => _submitSearch(state),
-              icon: state.isScanning 
+              icon: state.isScanning
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.search_rounded, size: 20),
               label: Text(
-                state.isScanning ? "Scan en cours…" : "Rechercher & Scanner",
+                state.isScanning ? s.scanning : s.searchAndScan,
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               style: ElevatedButton.styleFrom(
@@ -355,24 +360,32 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
 
           if (state.error.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Row(
-                  children: [
-                    Icon(Icons.error_rounded, color: Colors.red[400], size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                        child: Text(state.error, style: TextStyle(color: Colors.red[400], fontWeight: FontWeight.w500))),
-                  ],
-                ),
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Row(
+                children: [
+                  Icon(Icons.error_rounded, color: Colors.red.shade400, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      state.error,
+                      style: TextStyle(color: Colors.red.shade400, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
               ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _tabPill(AppState state, String key, String label) {
+  Widget _tabPill(BuildContext context, AppState state, String key, String label) {
     final isSelected = state.activeTab == key;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeBg = isDark ? const Color(0xFF1E2D47) : Colors.white;
+    final activeText = isDark ? const Color(0xFFF1F5F9) : Colors.black;
+    final inactiveText = isDark ? const Color(0xFF64748B) : Colors.grey.shade500;
     return GestureDetector(
       onTap: () {
         state.setActiveTab(key);
@@ -381,9 +394,11 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: isSelected ? activeBg : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: isSelected ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)] : null
+          boxShadow: isSelected && !isDark
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)]
+              : null,
         ),
         child: Text(
           label,
@@ -391,7 +406,7 @@ class _SearchScreenState extends State<SearchScreen> {
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 13,
-            color: isSelected ? Colors.black : Colors.grey[500]
+            color: isSelected ? activeText : inactiveText,
           ),
         ),
       ),
@@ -399,6 +414,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildResultsHeader(BuildContext context, AppState state, Color color) {
+    final s = AppStrings.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     String? scanningName;
     if (state.isScanning && state.currentScanCountryCode != null) {
       try {
@@ -409,61 +426,72 @@ class _SearchScreenState extends State<SearchScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-         Column(
-           crossAxisAlignment: CrossAxisAlignment.start,
-           children: [
-              Text('Résultats pour', style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.w600)),
-              Row(
-                children: [
-                  Text('#${state.productId}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () {
-                         if (state.productId != null) Share.share('Ref: ${state.productId}');
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-                      child: Icon(Icons.share_rounded, size: 14, color: color),
-                    ),
-                  )
-                ],
-              ),
-              if (scanningName != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    'Scan: $scanningName…',
-                    style: TextStyle(color: Colors.grey[400], fontSize: 11, fontStyle: FontStyle.italic),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              s.results,
+              style: TextStyle(color: AppTheme.subtleText(context), fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            Row(
+              children: [
+                Text(
+                  '#${state.productId}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                    color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
                   ),
                 ),
-           ],
-         ),
-         if (state.isScanning)
-           OutlinedButton.icon(
-              onPressed: state.stopScan,
-              icon: const SizedBox(
-                 width: 14, 
-                 height: 14, 
-                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red)
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    if (state.productId != null) Share.share('Ref: \${state.productId}');
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+                    child: Icon(Icons.share_rounded, size: 14, color: color),
+                  ),
+                ),
+              ],
+            ),
+            if (scanningName != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '\${s.scanningCountry} \$scanningName…',
+                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 11, fontStyle: FontStyle.italic),
+                ),
               ),
-              label: const Text('Stop'),
-              style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: BorderSide(color: Colors.red.withValues(alpha: 0.2)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
-              ),
-           )
-         else
-           FilledButton.icon(
-              onPressed: state.scanAll,
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Rescanner'),
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
-              ),
-           )
+          ],
+        ),
+        if (state.isScanning)
+          OutlinedButton.icon(
+            onPressed: state.stopScan,
+            icon: const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+            ),
+            label: Text(s.stop),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red,
+              side: BorderSide(color: Colors.red.withValues(alpha: 0.25)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+          )
+        else
+          FilledButton.icon(
+            onPressed: state.scanAll,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: Text(s.rescan),
+            style: FilledButton.styleFrom(
+              backgroundColor: isDark ? const Color(0xFF1E2D47) : Colors.black,
+              foregroundColor: isDark ? const Color(0xFFE2E8F0) : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+          ),
       ],
     );
   }
@@ -586,7 +614,9 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildProgressBar(AppState state, Color brandColor) {
+  Widget _buildProgressBar(BuildContext context, AppState state, Color brandColor) {
+    final s = AppStrings.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (!state.isScanning) return const SizedBox.shrink();
 
     int completedCount = 0;
@@ -609,7 +639,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: Colors.grey[200],
+              backgroundColor: isDark ? const Color(0xFF1E2D47) : Colors.grey.shade200,
               valueColor: AlwaysStoppedAnimation<Color>(brandColor),
             ),
           ),
@@ -618,11 +648,11 @@ class _SearchScreenState extends State<SearchScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Progression du scan...",
-                style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.bold),
+                s.scanProgress,
+                style: TextStyle(fontSize: 10, color: AppTheme.subtleText(context), fontWeight: FontWeight.bold),
               ),
               Text(
-                "${(progress * 100).toStringAsFixed(0)}%",
+                '\${(progress * 100).toStringAsFixed(0)}%',
                 style: TextStyle(fontSize: 10, color: brandColor, fontWeight: FontWeight.bold),
               ),
             ],
@@ -696,46 +726,50 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Meilleure offre trouvée !",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14,
-                    color: state.brand.useDarkText ? Colors.black : brandColor,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "Achetez en ${cheapestCountry.name} pour seulement ${minPriceEur.toStringAsFixed(2)} €",
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                if (savingsPercent != null) ...[
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+            child: Builder(builder: (context) {
+              final s = AppStrings.of(context);
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    s.bestOffer,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      color: state.brand.useDarkText ? Colors.black : brandColor,
                     ),
-                    child: Text(
-                      "Économisez ${savingsPercent.toStringAsFixed(0)}% par rapport à la France !",
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF065F46),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${s.buyIn} ${cheapestCountry!.name} — ${minPriceEur.toStringAsFixed(2)} €',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? const Color(0xFFCBD5E1) : Colors.black87,
+                    ),
+                  ),
+                  if (savingsPercent != null) ...[
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Économisez ${savingsPercent.toStringAsFixed(0)}${s.saveVsFrance}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF065F46),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
-            ),
+              );
+            }),
           ),
         ],
       ),
