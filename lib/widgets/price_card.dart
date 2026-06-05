@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/country.dart';
 import '../models/price_result.dart';
+import '../theme/app_theme.dart';
 
 class PriceCard extends StatelessWidget {
   final Country country;
@@ -26,7 +27,28 @@ class PriceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Premium Card Styling with special highlight for cheapest country
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Theme-aware colors
+    final cheapestBg = isDark 
+        ? const Color(0xFF064E3B).withValues(alpha: 0.25) // Translucent deep green in dark theme
+        : const Color(0xFFF0FDF4); // Light emerald green in light theme
+        
+    final normalBg = AppTheme.cardColor(context);
+    final cardBgColor = isCheapest ? cheapestBg : normalBg;
+
+    const cheapestBorder = Color(0xFF10B981);
+    final normalBorder = isDark ? const Color(0xFF1E2D47) : Colors.grey.withValues(alpha: 0.08);
+    final cardBorderColor = isCheapest ? cheapestBorder : normalBorder;
+
+    final cheapestShadow = const Color(0xFF10B981).withValues(alpha: isDark ? 0.08 : 0.15);
+    final normalShadow = Colors.black.withValues(alpha: isDark ? 0.15 : 0.03);
+    final cardShadowColor = isCheapest ? cheapestShadow : normalShadow;
+
+    final titleCheapestColor = isDark ? const Color(0xFF34D399) : const Color(0xFF065F46);
+    final titleNormalColor = isDark ? const Color(0xFFE2E8F0) : Colors.black87;
+    final cardTitleColor = isCheapest ? titleCheapestColor : titleNormalColor;
+
     return GestureDetector(
       onTap: onTap,
       child: Stack(
@@ -35,21 +57,17 @@ class PriceCard extends StatelessWidget {
           // Main Card Body
           Container(
             decoration: BoxDecoration(
-              color: isCheapest ? const Color(0xFFF0FDF4) : Colors.white, // Light emerald tint for cheapest
+              color: cardBgColor,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: isCheapest 
-                      ? const Color(0xFF10B981).withValues(alpha: 0.15) // Glowing green shadow
-                      : Colors.black.withValues(alpha: 0.03), // Soft gray shadow
+                  color: cardShadowColor,
                   blurRadius: isCheapest ? 12 : 8,
                   offset: const Offset(0, 4),
                 ),
               ],
               border: Border.all(
-                color: isCheapest 
-                    ? const Color(0xFF10B981) // Solid green border for cheapest
-                    : Colors.grey.withValues(alpha: 0.08),
+                color: cardBorderColor,
                 width: isCheapest ? 2.0 : 1.0,
               ),
             ),
@@ -70,12 +88,12 @@ class PriceCard extends StatelessWidget {
                              style: TextStyle(
                                fontWeight: isCheapest ? FontWeight.w800 : FontWeight.w600, 
                                fontSize: 12, 
-                               color: isCheapest ? const Color(0xFF065F46) : Colors.black87
+                               color: cardTitleColor
                              ),
                              overflow: TextOverflow.ellipsis,
                            ),
                          ),
-                         _buildScanButton(),
+                         _buildScanButton(context),
                        ],
                      ),
                      
@@ -83,11 +101,11 @@ class PriceCard extends StatelessWidget {
                      
                      // Content
                      if (result?.isLoaded == true)
-                       _buildPriceContent()
+                       _buildPriceContent(context)
                      else if (result?.isError == true)
-                       _buildErrorContent()
+                       _buildErrorContent(context)
                      else
-                       _buildEmptyContent(),
+                       _buildEmptyContent(context),
       
                      const Spacer(),
                   ],
@@ -132,9 +150,16 @@ class PriceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceContent() {
+  Widget _buildPriceContent(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isEuro = country.currency == '€';
     
+    // Theme-aware price colors
+    final convertedPriceColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E40AF);
+    final standardPriceColor = isDark ? const Color(0xFFF1F5F9) : Colors.black;
+    final localPriceBgColor = isDark ? const Color(0xFF1E293B) : Colors.grey[100];
+    final localPriceTextColor = isDark ? const Color(0xFF94A3B8) : Colors.grey[600];
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -142,9 +167,9 @@ class PriceCard extends StatelessWidget {
           // Big Converted Price
           Text(
             '≈ ${convertedPrice!.toStringAsFixed(2)} €',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 17,
-              color: Color(0xFF1E40AF), // Blue 800
+              color: convertedPriceColor,
               fontWeight: FontWeight.w900,
             ),
             overflow: TextOverflow.ellipsis,
@@ -154,12 +179,12 @@ class PriceCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: localPriceBgColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               '${result?.value} ${country.currency}',
-              style: TextStyle(fontSize: 10, color: Colors.grey[600], fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 10, color: localPriceTextColor, fontWeight: FontWeight.bold),
               overflow: TextOverflow.ellipsis,
             ),
           )
@@ -167,7 +192,7 @@ class PriceCard extends StatelessWidget {
            // Standard Price (Already Euro)
            Text(
             '${result?.value} ${country.currency}',
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Colors.black),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: standardPriceColor),
             overflow: TextOverflow.ellipsis,
           ),
         ]
@@ -175,37 +200,45 @@ class PriceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorContent() {
+  Widget _buildErrorContent(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final errorColor = isDark ? const Color(0xFFFCA5A5) : Colors.red[300];
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.error_outline_rounded, color: Colors.red[300], size: 20),
+        Icon(Icons.error_outline_rounded, color: errorColor, size: 20),
         const SizedBox(height: 3),
         Text(
           result?.msg ?? 'Erreur',
-          style: TextStyle(color: Colors.red[300], fontSize: 10, fontWeight: FontWeight.w500),
+          style: TextStyle(color: errorColor, fontSize: 10, fontWeight: FontWeight.w500),
           overflow: TextOverflow.ellipsis,
         ),
       ],
     );
   }
 
-  Widget _buildEmptyContent() {
+  Widget _buildEmptyContent(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark ? const Color(0xFF334155) : Colors.grey[300];
+    final textColor = isDark ? const Color(0xFF475569) : Colors.grey[400];
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.radar_rounded, color: Colors.grey[300], size: 20),
+        Icon(Icons.radar_rounded, color: iconColor, size: 20),
         const SizedBox(height: 3),
         Text(
           'Non scanné',
-          style: TextStyle(color: Colors.grey[400], fontSize: 11, fontWeight: FontWeight.w500),
+          style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.w500),
         ),
       ],
     );
   }
 
-  Widget _buildScanButton() {
+  Widget _buildScanButton(BuildContext context) {
     if (onScan == null) return const SizedBox.shrink();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (isScanningThis) {
       return const SizedBox(
@@ -223,7 +256,7 @@ class PriceCard extends StatelessWidget {
         : Icons.play_arrow_rounded;
 
     final Color color = (result?.isLoaded == true) 
-        ? Colors.grey[400]! 
+        ? (isDark ? const Color(0xFF475569) : Colors.grey[400]!) 
         : const Color(0xFF10B981);
 
     // Disable button if any scan is already running (excluding this one)

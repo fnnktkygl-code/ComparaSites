@@ -92,6 +92,52 @@ class _SearchScreenState extends State<SearchScreen> {
     state.analyze(autoScan: true);
   }
 
+  void _shareResults(BuildContext context, AppState state) {
+    if (state.productId == null) return;
+    final s = AppStrings.of(context);
+    
+    String? cheapestCountryCode;
+    double minPriceEur = double.infinity;
+    double? frPriceEur;
+    Country? cheapestCountry;
+
+    for (var country in kCountries) {
+      final result = state.prices[country.code];
+      if (result != null && result.isLoaded && result.value != null) {
+        final converted = state.getConvertedPrice(country, result.value);
+        if (converted != null) {
+          if (converted < minPriceEur) {
+            minPriceEur = converted;
+            cheapestCountryCode = country.code;
+            cheapestCountry = country;
+          }
+          if (country.code == 'FR') {
+            frPriceEur = converted;
+          }
+        }
+      }
+    }
+
+    String msg = 'ComparaSites ◈\n';
+    msg += '${state.brand.label} - Ref: ${state.productId}\n\n';
+
+    if (cheapestCountry != null) {
+      final priceStr = '${minPriceEur.toStringAsFixed(2)} €';
+      msg += '${s.bestOffer}\n';
+      msg += '${cheapestCountry.emoji} ${cheapestCountry.name} : $priceStr\n';
+      if (frPriceEur != null && cheapestCountryCode != 'FR') {
+        final frPriceStr = '${frPriceEur.toStringAsFixed(2)} €';
+        final diffPercent = (((frPriceEur - minPriceEur) / frPriceEur) * 100).toStringAsFixed(0);
+        msg += 'France : 🇫🇷 $frPriceStr (-$diffPercent%)\n';
+      }
+    } else {
+      msg += s.compareEurope;
+    }
+    
+    msg += '\nhttps://fnnktkygl-code.github.io/ComparaSites/';
+    Share.share(msg);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
@@ -445,9 +491,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
-                  onTap: () {
-                    if (state.productId != null) Share.share('Ref: \${state.productId}');
-                  },
+                  onTap: () => _shareResults(context, state),
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
@@ -456,11 +500,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ],
             ),
-            if (scanningName != null)
+            if (state.isScanning)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '\${s.scanningCountry} \$scanningName…',
+                  kIsWeb ? s.scanning : '${s.scanningCountry} ${scanningName ?? ""}…',
                   style: TextStyle(color: AppTheme.mutedText(context), fontSize: 11, fontStyle: FontStyle.italic),
                 ),
               ),
@@ -584,7 +628,7 @@ class _SearchScreenState extends State<SearchScreen> {
               result: result,
               isCheapest: isCheapest,
               convertedPrice: state.getConvertedPrice(country, result?.value),
-              isScanningThis: state.isScanning && state.currentScanCountryCode == country.code,
+              isScanningThis: state.isScanning && (state.currentScanCountryCode == country.code || (result?.isLoading ?? false)),
               isAnyScanRunning: state.isScanning,
               onScan: () => state.scanCountry(country),
               onTap: () async {

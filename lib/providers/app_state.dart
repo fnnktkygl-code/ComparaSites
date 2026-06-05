@@ -375,14 +375,20 @@ class AppState extends ChangeNotifier {
 
     await _api.updateExchangeRates();
 
-    for (var country in kCountries) {
-      if (!_isScanning) break;
+    if (kIsWeb) {
+      // On Web, run all scans concurrently to finish in 2-5 seconds
+      final futures = kCountries.map((country) => _scanSingleCountry(country)).toList();
+      await Future.wait(futures);
+    } else {
+      // On Mobile/Desktop, run sequentially with a very low delay (300ms) to avoid overlapping WebViews
+      for (var country in kCountries) {
+        if (!_isScanning) break;
 
-      await _scanSingleCountry(country);
+        await _scanSingleCountry(country);
 
-      // Delay between countries (3–5s) to stay under radar
-      if (_isScanning) {
-        await Future.delayed(Duration(milliseconds: 3000 + Random().nextInt(2000)));
+        if (_isScanning) {
+          await Future.delayed(Duration(milliseconds: 200 + Random().nextInt(200)));
+        }
       }
     }
 
