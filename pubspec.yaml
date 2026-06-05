@@ -40,17 +40,17 @@ flutter_icons:
   image_path: "assets/images/app_icon.png"
 
 flutter_native_splash:
-  color: "#051024"
+  color: "#050c1a"
   image: "assets/images/splash_logo.png"
   branding: "assets/images/splash_logo.png"
-  color_dark: "#051024"
+  color_dark: "#050c1a"
   image_dark: "assets/images/splash_logo.png"
   branding_dark: "assets/images/splash_logo.png"
   android_12:
     image: "assets/images/splash_logo.png"
-    icon_background_color: "#051024"
+    icon_background_color: "#050c1a"
     image_dark: "assets/images/splash_logo.png"
-    icon_background_color_dark: "#051024"
+    icon_background_color_dark: "#050c1a"
   fullscreen: true
 
 
