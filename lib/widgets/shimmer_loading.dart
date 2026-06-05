@@ -6,15 +6,19 @@ class ShimmerLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF1E2D47) : Colors.grey[300]!;
+    final highlightColor = isDark ? const Color(0xFF2D3F5E) : Colors.grey[100]!;
+    final bgColor = isDark ? const Color(0xFF111C30) : Colors.white;
+
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: baseColor,
+      highlightColor: highlightColor,
       child: Container(
          decoration: BoxDecoration(
-           color: Colors.white,
-           borderRadius: BorderRadius.circular(12),
+           color: bgColor,
+           borderRadius: BorderRadius.circular(16),
          ),
-         margin: const EdgeInsets.all(8),
       ),
     );
   }

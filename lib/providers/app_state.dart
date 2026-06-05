@@ -281,8 +281,16 @@ class AppState extends ChangeNotifier {
     try {
       double? price;
 
-      // ── Strategy A: WebView JS extraction (primary) ──
-      if (!kIsWeb) {
+      // ── Strategy A (Zara): Use dedicated JSON API (most reliable for Zara) ──
+      if (brand.key == 'zara') {
+        price = await _api.fetchZaraPrice(country, productId!);
+        if (price != null) {
+          debugPrint('[AppState] Zara API price for ${country.name}: $price');
+        }
+      }
+
+      // ── Strategy B: WebView JS extraction (primary for non-Zara on mobile) ──
+      if (price == null && !kIsWeb && brand.key != 'zara') {
         headlessUrl = _api.getSearchUrl(country, brand.key, productId!);
         _headlessCompleter = Completer<String?>();
         notifyListeners(); // Triggers WebView rebuild with new URL
@@ -325,7 +333,7 @@ class AppState extends ChangeNotifier {
         }
       }
 
-      // ── Strategy B: Direct HTTP fallback (for sites that serve static HTML) ──
+      // ── Strategy C: Direct HTTP fallback (for sites that serve static HTML) ──
       if (price == null && _isScanning) {
         debugPrint('[AppState] Trying HTTP fallback for ${country.name}...');
         price = await _api.fetchPrice(country, brand.key, productId!);
@@ -375,12 +383,12 @@ class AppState extends ChangeNotifier {
 
     await _api.updateExchangeRates();
 
-    if (kIsWeb) {
-      // On Web, run all scans concurrently to finish in 2-5 seconds
+    if (kIsWeb || brand.key == 'zara') {
+      // On Web or for Zara (which uses JSON API), run all scans concurrently
       final futures = kCountries.map((country) => _scanSingleCountry(country)).toList();
       await Future.wait(futures);
     } else {
-      // On Mobile/Desktop, run sequentially with a very low delay (300ms) to avoid overlapping WebViews
+      // On Mobile/Desktop, run sequentially to avoid overlapping WebViews
       for (var country in kCountries) {
         if (!_isScanning) break;
 
