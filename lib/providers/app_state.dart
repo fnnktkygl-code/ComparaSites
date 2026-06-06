@@ -197,8 +197,10 @@ class AppState extends ChangeNotifier {
       case Brand.decathlon:
         final mcMatch = RegExp(r'[?&]mc=(\d{7})').firstMatch(text);
         if (mcMatch != null) return mcMatch.group(1);
-        final looseMatch = RegExp(r'\b\d{7}\b').firstMatch(text);
-        if (looseMatch != null) return looseMatch.group(0);
+        final mMatch = RegExp(r'm(\d{7})(?:$|[/?&#])').firstMatch(text);
+        if (mMatch != null) return mMatch.group(1);
+        final looseMatch = RegExp(r'(\d{7})').firstMatch(text);
+        if (looseMatch != null) return looseMatch.group(1);
 
       case Brand.zara:
         // ── Extract slug and source path from full product URL for reliable per-country fetching ──
