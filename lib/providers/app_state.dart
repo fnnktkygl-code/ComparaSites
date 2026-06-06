@@ -335,9 +335,9 @@ class AppState extends ChangeNotifier {
 
       // ── Strategy B: WebView JS extraction (primary for non-Zara or fallback on mobile/desktop) ──
       if (price == null && !kIsWeb) {
-        // For Zara on mobile/desktop, navigate to the product page directly ONLY if it's the source country,
-        // otherwise search for the product code to avoid 404s due to translated slugs.
-        final useSlug = brand.key == 'zara' && _zaraSlug != null && country.zaraPath == _zaraSourcePath;
+        // For Zara on mobile/desktop, always navigate to the product page directly if slug is available
+        // to avoid parsing cheap accessories from the search results.
+        final useSlug = brand.key == 'zara' && _zaraSlug != null;
         headlessUrl = useSlug
             ? 'https://www.zara.com/${country.zaraPath}/$_zaraSlug'
             : _api.getSearchUrl(country, brand.key, productId!);

@@ -962,12 +962,12 @@ class _HeadlessWebViewState extends State<_HeadlessWebView> {
                     var offers = data.offers;
                     if (Array.isArray(offers)) {
                       for (var o = 0; o < offers.length; o++) {
-                        if (offers[o].lowPrice) addCandidate(offers[o].lowPrice.toString());
-                        if (offers[o].price) addCandidate(offers[o].price.toString());
+                        if (offers[o].lowPrice) return JSON.stringify([offers[o].lowPrice.toString()]);
+                        if (offers[o].price) return JSON.stringify([offers[o].price.toString()]);
                       }
                     } else {
-                      if (offers.lowPrice) addCandidate(offers.lowPrice.toString());
-                      if (offers.price) addCandidate(offers.price.toString());
+                      if (offers.lowPrice) return JSON.stringify([offers.lowPrice.toString()]);
+                      if (offers.price) return JSON.stringify([offers.price.toString()]);
                     }
                   }
                 } catch(inner) {}
