@@ -144,9 +144,11 @@ class ApiService {
         'https://api.scraperapi.com?api_key=ebf320e9726a57fe4d6e8a4397744922&url=${Uri.encodeComponent(targetUrl)}',
       ];
 
+      // Use a clean Dio without custom headers on Web to avoid triggering OPTIONS preflight
+      final webDio = Dio();
       for (final proxyUrl in proxies) {
         try {
-          final resp = await _zaraDio.get(proxyUrl);
+          final resp = await webDio.get(proxyUrl);
           if (resp.statusCode == 200) {
             final body = resp.data.toString();
             if (body.length > 500 && !_isBlocked(body)) {
