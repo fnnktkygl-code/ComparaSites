@@ -140,20 +140,9 @@ class ApiService {
   /// On mobile: direct HTTP request.
   Future<String?> _fetchWithProxy(String targetUrl) async {
     if (kIsWeb) {
-      List<String> proxies;
-      if (targetUrl.contains('zara.com')) {
-        // ScraperAPI bypasses Akamai WAF for Zara on the web
-        proxies = [
-          'https://api.scraperapi.com?api_key=ebf320e9726a57fe4d6e8a4397744922&url=${Uri.encodeComponent(targetUrl)}',
-        ];
-      } else {
-        // Free proxies for non-Zara sites to save ScraperAPI credits
-        proxies = [
-          'https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}',
-          'https://corsproxy.io/?${Uri.encodeComponent(targetUrl)}',
-          'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(targetUrl)}',
-        ];
-      }
+      final proxies = [
+        'https://api.scraperapi.com?api_key=ebf320e9726a57fe4d6e8a4397744922&url=${Uri.encodeComponent(targetUrl)}',
+      ];
 
       for (final proxyUrl in proxies) {
         try {
