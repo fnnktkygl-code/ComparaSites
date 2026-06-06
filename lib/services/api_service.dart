@@ -430,10 +430,10 @@ class ApiService {
     if (html.isEmpty) return null;
     final clean = html.replaceAll(RegExp(r'\s+'), ' ');
 
-    final jsonLd = RegExp(r'"price"\s*:\s*"?(\d+[.,]\d{1,2})"?').firstMatch(clean);
+    final jsonLd = RegExp(r'"price"\s*:\s*"?(\d+(?:[.,]\d{1,2})?)"?').firstMatch(clean);
     if (jsonLd != null) return jsonLd.group(1)?.replaceAll(',', '.');
 
-    final lowPrice = RegExp(r'"lowPrice"\s*:\s*"?(\d+[.,]\d{1,2})"?').firstMatch(clean);
+    final lowPrice = RegExp(r'"lowPrice"\s*:\s*"?(\d+(?:[.,]\d{1,2})?)"?').firstMatch(clean);
     if (lowPrice != null) return lowPrice.group(1)?.replaceAll(',', '.');
 
     final meta = RegExp(
@@ -444,14 +444,18 @@ class ApiService {
 
     const currencySymbols = r'€|EUR|£|GBP|\$|zł|PLN|lei|RON|Ft|HUF|Kč|CZK';
     final regex = RegExp(
-      '(?:($currencySymbols)\\s*(\\d+[.,]\\d{1,2}))|(?:(\\d+[.,]\\d{1,2})\\s*($currencySymbols))',
+      '(?:($currencySymbols)\\s*(\\d{1,3}(?:[ .]?\\d{3})*(?:[.,]\\d{1,2})?))|(?:(\\d{1,3}(?:[ .]?\\d{3})*(?:[.,]\\d{1,2})?)\\s*($currencySymbols))',
       caseSensitive: false,
     );
 
     final prices = <double>[];
     for (final m in regex.allMatches(clean)) {
-      final val = double.tryParse((m.group(2) ?? m.group(3))?.replaceAll(',', '.') ?? '');
-      if (val != null && val > 0) prices.add(val);
+      var priceStr = (m.group(2) ?? m.group(3));
+      if (priceStr != null) {
+        priceStr = priceStr.replaceAll(' ', '').replaceAll(',', '.');
+        final val = double.tryParse(priceStr);
+        if (val != null && val > 0) prices.add(val);
+      }
     }
     if (prices.isEmpty) return null;
     prices.sort();
