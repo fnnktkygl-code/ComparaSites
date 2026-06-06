@@ -252,6 +252,8 @@ class AppState extends ChangeNotifier {
       case Brand.sephora:
         final pMatch = RegExp(r'/p-p(\d+)', caseSensitive: false).firstMatch(text);
         if (pMatch != null) return pMatch.group(1);
+        final dashHtmlMatch = RegExp(r'-(\d{5,10})\.html', caseSensitive: false).firstMatch(text);
+        if (dashHtmlMatch != null) return dashHtmlMatch.group(1);
         final pCodeMatch = RegExp(r'\bp(\d{5,10})\b', caseSensitive: false).firstMatch(text);
         if (pCodeMatch != null) return pCodeMatch.group(1);
         final eanMatch = RegExp(r'\b\d{13}\b').firstMatch(text);
