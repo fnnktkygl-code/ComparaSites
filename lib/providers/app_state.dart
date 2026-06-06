@@ -24,6 +24,7 @@ class AppState extends ChangeNotifier {
   /// For Zara: stores the product page slug (e.g. "pantalon-lin-p05070902.html")
   /// so we can build per-country product URLs for reliable price fetching.
   String? _zaraSlug;
+  String? _zaraSourcePath;
 
   String _error = '';
   String get error => _error;
@@ -68,6 +69,7 @@ class AppState extends ChangeNotifier {
     _isScanning = false;
     _currentScanCountryCode = null;
     _zaraSlug = null;
+    _zaraSourcePath = null;
     _cancelHeadless();
   }
 
@@ -75,6 +77,7 @@ class AppState extends ChangeNotifier {
     _brand = Brand.fromKey(item.brand);
     _productId = item.productId;
     _zaraSlug = null;
+    _zaraSourcePath = null;
     _prices = {};
     _error = '';
     for (var entry in item.prices.entries) {
@@ -92,6 +95,7 @@ class AppState extends ChangeNotifier {
     _isScanning = false;
     _currentScanCountryCode = null;
     _zaraSlug = null;
+    _zaraSourcePath = null;
 
     String? foundId;
 
@@ -197,15 +201,16 @@ class AppState extends ChangeNotifier {
         if (looseMatch != null) return looseMatch.group(0);
 
       case Brand.zara:
-        // ── Extract slug from full product URL for reliable per-country fetching ──
-        // e.g. zara.com/fr/fr/pantalon-linen-p05070902.html → slug = pantalon-linen-p05070902.html
+        // ── Extract slug and source path from full product URL for reliable per-country fetching ──
+        // e.g. zara.com/fr/fr/pantalon-linen-p05070902.html → slug = pantalon-linen-p05070902.html, sourcePath = fr/fr
         final slugMatch = RegExp(
-          r'zara\.com/[^/]+/[^/]+/([^?#]+\.html)',
+          r'zara\.com/([^/]+/[^/]+)/([^?#]+\.html)',
           caseSensitive: false,
         ).firstMatch(text);
         if (slugMatch != null) {
-          _zaraSlug = slugMatch.group(1)!;
-          debugPrint('[AppState] Zara slug captured: $_zaraSlug');
+          _zaraSourcePath = slugMatch.group(1)!;
+          _zaraSlug = slugMatch.group(2)!;
+          debugPrint('[AppState] Zara captured source path: $_zaraSourcePath, slug: $_zaraSlug');
         }
 
         // Clean product reference for display (4-digit/3-digit format)
@@ -306,7 +311,8 @@ class AppState extends ChangeNotifier {
           // Zara blocks all server-side/proxy fetches (403 on everything).
           // Best UX: give user a direct link to the product page per country.
           final locale = country.zaraPath;
-          final url = (_zaraSlug != null)
+          final useSlug = _zaraSlug != null && locale == _zaraSourcePath;
+          final url = useSlug
               ? 'https://www.zara.com/$locale/$_zaraSlug'
               : _api.getSearchUrl(country, brand.key, productId!);
           _prices[country.code] = PriceResult.webOnly(url);
@@ -327,8 +333,10 @@ class AppState extends ChangeNotifier {
 
       // ── Strategy B: WebView JS extraction (primary for non-Zara or fallback on mobile/desktop) ──
       if (price == null && !kIsWeb) {
-        // For Zara on mobile with slug, navigate to the product page directly
-        headlessUrl = (brand.key == 'zara' && _zaraSlug != null)
+        // For Zara on mobile/desktop, navigate to the product page directly ONLY if it's the source country,
+        // otherwise search for the product code to avoid 404s due to translated slugs.
+        final useSlug = brand.key == 'zara' && _zaraSlug != null && country.zaraPath == _zaraSourcePath;
+        headlessUrl = useSlug
             ? 'https://www.zara.com/${country.zaraPath}/$_zaraSlug'
             : _api.getSearchUrl(country, brand.key, productId!);
         _headlessCompleter = Completer<String?>();
@@ -423,12 +431,12 @@ class AppState extends ChangeNotifier {
     try {
       await _api.updateExchangeRates();
 
-      if (kIsWeb || brand.key == 'zara') {
-        // On Web or for Zara (JSON API — no WebView bottleneck), run concurrently
+      if (kIsWeb) {
+        // On Web, run concurrently (no WebView bottleneck)
         final futures = kCountries.map((country) => _scanSingleCountry(country)).toList();
         await Future.wait(futures);
       } else {
-        // On Mobile/Desktop for non-Zara, run sequentially to avoid overlapping WebViews
+        // On Mobile/Desktop, run sequentially to avoid overlapping WebViews
         for (var country in kCountries) {
           if (!_isScanning) break;
           await _scanSingleCountry(country);
