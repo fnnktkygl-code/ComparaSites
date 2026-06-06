@@ -140,12 +140,20 @@ class ApiService {
   /// On mobile: direct HTTP request.
   Future<String?> _fetchWithProxy(String targetUrl) async {
     if (kIsWeb) {
-      // Try allorigins.win first — reliable, no special headers needed
-      final proxies = [
-        'https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}',
-        'https://corsproxy.io/?${Uri.encodeComponent(targetUrl)}',
-        'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(targetUrl)}',
-      ];
+      List<String> proxies;
+      if (targetUrl.contains('zara.com')) {
+        // ScraperAPI bypasses Akamai WAF for Zara on the web
+        proxies = [
+          'https://api.scraperapi.com?api_key=ebf320e9726a57fe4d6e8a4397744922&url=${Uri.encodeComponent(targetUrl)}',
+        ];
+      } else {
+        // Free proxies for non-Zara sites to save ScraperAPI credits
+        proxies = [
+          'https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}',
+          'https://corsproxy.io/?${Uri.encodeComponent(targetUrl)}',
+          'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(targetUrl)}',
+        ];
+      }
 
       for (final proxyUrl in proxies) {
         try {
@@ -430,11 +438,21 @@ class ApiService {
     if (html.isEmpty) return null;
     final clean = html.replaceAll(RegExp(r'\s+'), ' ');
 
-    final jsonLd = RegExp(r'"price"\s*:\s*"?(\d+(?:[.,]\d{1,2})?)"?').firstMatch(clean);
-    if (jsonLd != null) return jsonLd.group(1)?.replaceAll(',', '.');
-
-    final lowPrice = RegExp(r'"lowPrice"\s*:\s*"?(\d+(?:[.,]\d{1,2})?)"?').firstMatch(clean);
-    if (lowPrice != null) return lowPrice.group(1)?.replaceAll(',', '.');
+    // 1) Find all prices in JSON-LD to handle promos on search pages
+    final jsonLdMatches = RegExp(r'"(?:lowPrice|price)"\s*:\s*"?(\d+(?:[.,]\d{1,2})?)"?').allMatches(clean);
+    if (jsonLdMatches.isNotEmpty) {
+      double? minPrice;
+      for (final match in jsonLdMatches) {
+        final priceStr = match.group(1)?.replaceAll(',', '.');
+        if (priceStr != null) {
+          final p = double.tryParse(priceStr);
+          if (p != null && (minPrice == null || p < minPrice)) {
+            minPrice = p;
+          }
+        }
+      }
+      if (minPrice != null) return minPrice.toString();
+    }
 
     final meta = RegExp(
       r'meta property="product:price:amount" content="([\d.]+)"',
