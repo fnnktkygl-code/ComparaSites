@@ -950,27 +950,28 @@ class _HeadlessWebViewState extends State<_HeadlessWebView> {
             // 1) Extract from JSON-LD
             try {
               var scripts = document.querySelectorAll('script[type="application/ld+json"]');
+              var jsonPrices = [];
               for (var i = 0; i < scripts.length; i++) {
                 try {
                   var data = JSON.parse(scripts[i].innerText);
-                  if (Array.isArray(data)) {
-                    var product = data.find(function(x) { return x['@type'] === 'Product'; });
-                    if (product) data = product;
-                    else data = data[0];
-                  }
-                  if (data && data['@type'] === 'Product' && data.offers) {
-                    var offers = data.offers;
-                    if (Array.isArray(offers)) {
+                  var products = Array.isArray(data) ? data : [data];
+                  for (var p = 0; p < products.length; p++) {
+                    var prod = products[p];
+                    if (prod && prod['@type'] === 'Product' && prod.offers) {
+                      var offers = Array.isArray(prod.offers) ? prod.offers : [prod.offers];
                       for (var o = 0; o < offers.length; o++) {
-                        if (offers[o].lowPrice) return JSON.stringify([offers[o].lowPrice.toString()]);
-                        if (offers[o].price) return JSON.stringify([offers[o].price.toString()]);
+                        if (offers[o].lowPrice) jsonPrices.push(parseFloat(offers[o].lowPrice));
+                        if (offers[o].price) jsonPrices.push(parseFloat(offers[o].price));
                       }
-                    } else {
-                      if (offers.lowPrice) return JSON.stringify([offers.lowPrice.toString()]);
-                      if (offers.price) return JSON.stringify([offers.price.toString()]);
                     }
                   }
                 } catch(inner) {}
+              }
+              if (jsonPrices.length > 0) {
+                var minP = Math.min.apply(null, jsonPrices.filter(function(x) { return !isNaN(x) && x > 0; }));
+                if (minP && minP !== Infinity) {
+                  return JSON.stringify([minP.toString()]);
+                }
               }
             } catch(e) {}
 

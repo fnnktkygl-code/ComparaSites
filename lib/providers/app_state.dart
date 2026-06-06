@@ -308,18 +308,18 @@ class AppState extends ChangeNotifier {
       double? price;
 
       // ── Strategy A (Zara): Dedicated approach ──
-      if (brand.key == 'zara') {
+      if (brand.key == 'zara' && kIsWeb) {
         price = await _api.fetchZaraPrice(
           country,
           productId!,
           zaraSlug: _zaraSlug,
         );
         if (price != null) {
-          debugPrint('[AppState] Zara price for ${country.name}: $price');
+          debugPrint('[AppState] Zara proxy price for ${country.name}: $price');
         }
       }
 
-      // ── Strategy B: WebView JS extraction (primary for non-Zara or fallback on mobile/desktop) ──
+      // ── Strategy B: WebView JS extraction (primary for Zara on mobile/desktop, or fallback) ──
       if (price == null && !kIsWeb) {
         // For Zara on mobile/desktop, always navigate to the product page directly if slug is available
         // to avoid parsing cheap accessories from the search results.
@@ -382,6 +382,16 @@ class AppState extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
+        if (brand.key == 'zara' && kIsWeb) {
+          final locale = country.zaraPath;
+          final useSlug = _zaraSlug != null;
+          final url = useSlug
+              ? 'https://www.zara.com/$locale/$_zaraSlug'
+              : _api.getSearchUrl(country, brand.key, productId!);
+          _prices[country.code] = PriceResult.webOnly(url);
+          notifyListeners();
+          return false;
+        }
         _prices[country.code] = const PriceResult.error('Indisponible');
         notifyListeners();
         return false;
